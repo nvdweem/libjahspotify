@@ -4,3 +4,15 @@
 *.jar
 *.war
 *.ear
+
+# Eclipse / Maven files #
+target/
+.classpath
+.project
+.settings
+rebel.xml
+
+# Native libs #
+*.dll
+*.so
+*.jnilib
