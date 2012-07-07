@@ -3,6 +3,7 @@ package jahspotify.media;
 import jahspotify.util.BaseConvert;
 import jahspotify.util.Hex;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -37,9 +38,11 @@ import java.util.regex.Pattern;
  * @author Felix Bruns <felixbruns@web.de>
  * @author Johan Lindquist
  */
-public class Link implements Comparable<Link>
+public class Link implements Comparable<Link>, Serializable
 {
-    public String getUri()
+	private static final long serialVersionUID = 1L;
+
+	public String getUri()
     {
         return uri;
     }
