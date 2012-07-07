@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -57,10 +55,6 @@ public class JahSpotifyImpl implements JahSpotify
 
     private native int initialize(String tempfolder, String username, String password);
 
-    private final Set<Link> _lockedTracks = new CopyOnWriteArraySet<Link>();
-    private final Set<Link> _lockedArtists = new CopyOnWriteArraySet<Link>();
-    private final Set<Link> _lockedAlbums = new CopyOnWriteArraySet<Link>();
-    private final Set<Link> _lockedImages = new CopyOnWriteArraySet<Link>();
     private final PlaylistContainer playlistContainer = new PlaylistContainer();
 
     protected JahSpotifyImpl()
@@ -71,10 +65,6 @@ public class JahSpotifyImpl implements JahSpotify
             public void track(final int token, final Link link)
             {
                 _log.trace(String.format("Track loaded: token=%d link=%s", token, link));
-                if (_lockedTracks.contains(link))
-                {
-                    _lockedTracks.remove(link);
-                }
             }
 
             @Override
@@ -231,28 +221,16 @@ public class JahSpotifyImpl implements JahSpotify
     protected void albumLoadedCallback(final int token, final Album album)
     {
         _log.trace(String.format("Album loaded: token=%d link=%s", token, album.getId()));
-        if (_lockedAlbums.contains(album.getId()))
-        {
-            _lockedAlbums.remove(album.getId());
-        }
     }
 
     protected void imageLoadedCallback(final int token, final Link link, final ImageSize imageSize, final byte[] imageBytes)
     {
         _log.trace(String.format("Image loaded: token=%d link=%s", token, link));
-        if (_lockedImages.contains(link))
-        {
-            _lockedImages.remove(link);
-        }
     }
 
     protected void artistLoadedCallback(final int token, final Artist artist)
     {
         _log.trace(String.format("Artist loaded: token=%d link=%s", token, artist.getId()));
-        if (_lockedArtists.contains(artist.getId()))
-        {
-            _lockedArtists.remove(artist.getId());
-        }
     }
 
     public static synchronized JahSpotify getInstance()
@@ -301,18 +279,7 @@ public class JahSpotifyImpl implements JahSpotify
         _libSpotifyLock.lock();
         try
         {
-            final Album album = retrieveAlbum(uri.asString(), browse);
-
-            if (album == null)
-            {
-                _lockedAlbums.add(uri);
-            }
-            else
-            {
-                _lockedAlbums.remove(uri);
-            }
-
-            return album;
+            return retrieveAlbum(uri.asString(), browse);
         }
         finally
         {
@@ -333,21 +300,7 @@ public class JahSpotifyImpl implements JahSpotify
         _libSpotifyLock.lock();
         try
         {
-            final Artist artist = retrieveArtist(uri.asString(), browse);
-
-            if (artist == null)
-            {
-                _lockedArtists.add(uri);
-            }
-            else
-            {
-                synchronized (_lockedArtists)
-                {
-                    _lockedArtists.remove(uri);
-                }
-            }
-
-            return artist;
+            return retrieveArtist(uri.asString(), browse);
         }
         finally
         {
@@ -363,19 +316,7 @@ public class JahSpotifyImpl implements JahSpotify
         _libSpotifyLock.lock();
         try
         {
-            final Track track = retrieveTrack(uri.asString());
-            if (track == null)
-            {
-                _lockedTracks.add(uri);
-            }
-            else
-            {
-                synchronized (_lockedTracks)
-                {
-                    _lockedTracks.remove(uri);
-                }
-            }
-            return track;
+            return retrieveTrack(uri.asString());
         }
         finally
         {
