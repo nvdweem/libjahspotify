@@ -11,7 +11,7 @@ import java.util.List;
  * @author Felix Bruns <felixbruns@web.de>
  * @author Johan Lindquist
  */
-public class Playlist extends Container
+public class Playlist
 {
     private Link id;
     private String name;
