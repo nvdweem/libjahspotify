@@ -1554,8 +1554,6 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativePlayTrack (JNIE
                 sp_link_release(currentTrackLink);
             }
 
-            signalTrackEnded(currentTrackLinkStr, JNI_TRUE);
-
             if (currentTrackLinkStr)
             {
                 free(currentTrackLinkStr);
