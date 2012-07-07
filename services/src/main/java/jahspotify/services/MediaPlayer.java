@@ -245,8 +245,11 @@ public class MediaPlayer implements PlaybackListener {
 
 	@Override
 	public void trackEnded(Link link, boolean forcedEnd) {
-		if (!next())
+		if (!next()) {
 			pause();
+			currentTrack = null;
+			audio = null;
+		}
 	}
 
 	@Override
