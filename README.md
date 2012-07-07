@@ -17,7 +17,6 @@ libJah'Spotify is a Java wrapper built on top of the Spotify native APIs (libspo
 
 Currently supports:
 
-* retrieving library (all user playlists/folders)
 * retrieve a playlist
 * retrieve an album
 * retrieve a track
@@ -63,15 +62,13 @@ For windows, you will need to download a few more dependencies:
 
 * api
 
-  provides the basic operations for interacting with libJah'Spotify (and in turn libspotify)
+  Provides the basic operations for interacting with libJah'Spotify (and in turn libspotify).
+  The services package provides components which make the Api more easy to use.
 
 * native
 
-  contains all native & JNI code interacting with libspotify
+  Contains all native & JNI code interacting with libspotify.
 
-* services
-
-  provides components which make the Api more easy to use
 
 ## Licensing
 
