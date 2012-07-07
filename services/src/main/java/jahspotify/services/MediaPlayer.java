@@ -8,6 +8,7 @@ import jahspotify.media.Track;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -22,6 +23,7 @@ public class MediaPlayer implements PlaybackListener {
 	private transient final JahSpotify spotify = JahSpotifyImpl.getInstance();
 	private static final int MAX_HISTORY = 50;
 
+	private List<Queue<Link>> queues = new ArrayList<Queue<Link>>();
 	private List<Track> history = new ArrayList<Track>();
 	private int rate = 0, channels = 0;
 	private int positionOffset = 0;
@@ -78,9 +80,8 @@ public class MediaPlayer implements PlaybackListener {
 	 * @return
 	 */
 	private boolean next() {
-		QueueTrack qTrack = QueueManager.getInstance().getNextQueueTrack();
-		if (qTrack == null) return false;
-		Track track = spotify.readTrack(qTrack.getTrackUri());
+		Track track = getNextTrack(true);
+		if (track == null) return false;
 
 		currentTrack = track;
 		playNow(track);
@@ -254,9 +255,34 @@ public class MediaPlayer implements PlaybackListener {
 
 	@Override
 	public Link nextTrackToPreload() {
-		QueueTrack track = QueueManager.getInstance().peekAtNextTrack();
+		Track track = getNextTrack(false);
 		if (track == null) return null;
-		return track.getTrackUri();
+		return track.getId();
+	}
+
+	/**
+	 * Get the next track
+	 * @return
+	 */
+	public Track getNextTrack(boolean popQueue) {
+		for (Queue<Link> q : queues) {
+			Link next;
+			if (popQueue)
+				next = q.poll();
+			else
+				next = q.peek();
+
+			if (next != null)
+				return JahSpotifyImpl.getInstance().readTrack(next);
+		}
+		return null;
+	}
+
+	public void addQueue(Queue<Link> queue) {
+		queues.add(queue);
+	}
+	public void removeQueue(Queue<Link> queue) {
+		queues.remove(queue);
 	}
 
 }
