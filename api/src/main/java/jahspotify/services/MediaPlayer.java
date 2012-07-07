@@ -221,6 +221,7 @@ public class MediaPlayer implements PlaybackListener {
 	}
 
 	private void setVolumeToAudio(int volume) {
+		if (audio == null) return;
 		if (audio.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
 			FloatControl volumeControl = (FloatControl) audio
 					.getControl(FloatControl.Type.MASTER_GAIN);
