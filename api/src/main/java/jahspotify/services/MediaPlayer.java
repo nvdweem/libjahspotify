@@ -183,7 +183,7 @@ public class MediaPlayer implements PlaybackListener {
 					format.getFrameRate(), false);
 
 			audio = AudioSystem.getSourceDataLine(format);
-			audio.open(format);
+			audio.open(format, rate * 4);
 			setVolumeToAudio(volume);
 			audio.start();
 		} catch (Exception e) {
