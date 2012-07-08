@@ -1,14 +1,17 @@
 package jahspotify;
 
-import java.util.List;
-
 import jahspotify.media.Link;
+import jahspotify.media.Loadable;
+
+import java.util.List;
 
 /**
  * @author Johan Lindquist
  */
-public class SearchResult
+public class SearchResult implements Loadable
 {
+	private boolean loaded = false;
+
    private String query;
    private String didYouMean;
    private List<Link> tracksFound;
@@ -93,4 +96,14 @@ public class SearchResult
                 ", artistOffset=" + artistOffset +
                 '}';
     }
+
+	@Override
+	public void setLoaded(boolean loaded) {
+		this.loaded = loaded;
+	}
+
+	@Override
+	public boolean isLoaded() {
+		return loaded;
+	}
 }

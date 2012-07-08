@@ -681,6 +681,130 @@ exit:
 //   sp_track_release(track);
 // }
 
+jobject createSearchResult(JNIEnv* env) {
+	return createInstanceFromJClass(env,g_nativeSearchResultClass);
+}
+
+void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult) {
+	sp_toplistbrowse_add_ref(result);
+	JNIEnv* env = NULL;
+	jobject jLink;
+	jobject trackLinkCollection;
+	jobject albumLinkCollection;
+	jobject artistLinkCollection;
+
+	int numResultsFound = 0;
+	int index = 0;
+  
+	log_debug("jahspotify","toplistCallback", "Search complete: token: %d");
+  
+	if (!retrieveEnv((JNIEnv*)&env))
+	{
+		goto fail;
+	}
+    
+	trackLinkCollection = createInstance(env,"java/util/ArrayList");
+	setObjectObjectField(env,nativeSearchResult,"tracksFound","Ljava/util/List;",trackLinkCollection);
+	  
+	numResultsFound = sp_toplistbrowse_num_tracks(result);
+	for (index = 0; index < numResultsFound; index++)
+	{
+		sp_track *track = sp_toplistbrowse_track(result, index);
+		if (track)
+		{
+			sp_track_add_ref(track);
+	          
+			if (sp_track_is_loaded(track))
+			{
+				sp_link *link = sp_link_create_from_track(track,0);
+				if (link)
+				{
+					sp_link_add_ref(link);
+					jLink = createJLinkInstance(env, link);
+					addObjectToCollection(env, trackLinkCollection,jLink);
+					sp_link_release(link);
+				}
+			}
+			else
+			{
+				log_error("jahspotify","toplistCallback" , "Track not loaded");
+			}
+			sp_track_release(track);
+		}
+	}
+	  
+	albumLinkCollection = createInstance(env,"java/util/ArrayList");
+	setObjectObjectField(env,nativeSearchResult,"albumsFound","Ljava/util/List;",albumLinkCollection);
+
+	numResultsFound = sp_toplistbrowse_num_albums(result);
+	for (index = 0; index < numResultsFound; index++)
+	{
+		sp_album *album = sp_toplistbrowse_album(result, index);
+		if (album)
+		{
+			sp_album_add_ref(album);
+
+			if (sp_album_is_loaded(album))
+			{
+				sp_link *link = sp_link_create_from_album(album);
+				if (link)
+				{
+					sp_link_add_ref(link);
+					jLink = createJLinkInstance(env, link);
+					addObjectToCollection(env, albumLinkCollection,jLink);
+					sp_link_release(link);
+				}
+			}
+			else
+			{
+				log_error("jahspotify","signalSearchComplete" , "Album not loaded");
+			}
+			sp_album_release(album);
+		}
+	}
+	  
+	  
+	artistLinkCollection = createInstance(env,"java/util/ArrayList");
+	setObjectObjectField(env,nativeSearchResult,"artistsFound","Ljava/util/List;",artistLinkCollection);
+	  
+	numResultsFound = sp_toplistbrowse_num_artists(result);
+	for (index = 0; index < numResultsFound; index++)
+	{
+		sp_artist *artist = sp_toplistbrowse_artist(result, index);
+		if (artist)
+		{
+			sp_artist_add_ref(artist);
+	          
+			if (sp_artist_is_loaded(artist))
+			{
+				sp_link *link = sp_link_create_from_artist(artist);
+				if (link)
+				{
+					sp_link_add_ref(link);
+					jLink = createJLinkInstance(env, link);
+					addObjectToCollection(env, artistLinkCollection,jLink);
+					sp_link_release(link);
+				}
+			}
+			else
+			{
+				log_error("jahspotify","signalSearchComplete" , "Artist not loaded");
+			}
+			sp_artist_release(artist);
+		}
+	}
+
+	setObjectBooleanField(env,nativeSearchResult,"loaded",JNI_TRUE);
+	  
+	goto exit;
+	  
+	fail:
+	  
+	exit:
+	sp_toplistbrowse_release(result);
+	detachThread();	  
+}
+
 int signalSearchComplete(sp_search *search, int32_t token)
 {
    if (!g_searchCompleteListener)

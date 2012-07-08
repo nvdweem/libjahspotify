@@ -27,4 +27,7 @@ int signalPlaylistLoaded(sp_playlist *track, int32_t token);
 int signalAlbumBrowseLoaded(sp_albumbrowse *albumBrowse, jobject token);
 int signalArtistBrowseLoaded(sp_artistbrowse *artistBrowse, jobject token);
 
+jobject createSearchResult(JNIEnv* env);
+void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult);
+
 #endif

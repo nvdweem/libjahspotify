@@ -6,6 +6,7 @@ import jahspotify.media.Image;
 import jahspotify.media.Link;
 import jahspotify.media.Playlist;
 import jahspotify.media.PlaylistContainer;
+import jahspotify.media.TopListType;
 import jahspotify.media.Track;
 import jahspotify.media.User;
 
@@ -55,16 +56,21 @@ public interface JahSpotify
      */
     public Image readImage(Link link);
 
-    /** Read the information for the specified playlist.
-     *
-     *
-     *
+    /**
+     * Read the information for the specified playlist.
      * @param link The link for the playlist in question
      * @param index Index to start from
      * @param numEntries The number of entries of the playlist to retrieve  @return The read playlist or null if it could not be read
      * @return The processed playlist
      */
     public Playlist readPlaylist(Link link, final int index, final int numEntries);
+
+    /**
+     * Retrieves a toplist.
+     * @param Type of toplist.
+     * @return SearchResult with the correct list filled.
+     */
+    public SearchResult getTopList(TopListType type);
 
     /**
      * Retrieves the playlistcontainer with all playlists for the current user.

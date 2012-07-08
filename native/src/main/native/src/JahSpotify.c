@@ -1389,21 +1389,27 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTrack ( JN
 JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrievePlaylist ( JNIEnv *env, jobject obj, jstring uri)
 {
     jobject playlistInstance;
+	sp_playlist *playlist;
     uint8_t *nativeUri = NULL;
+	sp_link *link = NULL;
 
-	nativeUri = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, uri, NULL );
+	if (uri) {
+		nativeUri = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, uri, NULL );
 
-    log_debug("jahspotify","retrievePlaylist","Retrieving playlist: %s",nativeUri );
+		log_debug("jahspotify","retrievePlaylist","Retrieving playlist: %s",nativeUri );
 
-    sp_link *link = sp_link_create_from_string(nativeUri);
-    if (!link)
-    {
-        // hmm
-        log_error("jahspotify","retrievePlaylist","Could not create link!" );
-        return JNI_FALSE;
-    }
+		link = sp_link_create_from_string(nativeUri);
+		if (!link)
+		{
+			// hmm
+			log_error("jahspotify","retrievePlaylist","Could not create link!" );
+			return JNI_FALSE;
+		}
 
-    sp_playlist *playlist = sp_playlist_create(g_sess,link);
+		playlist = sp_playlist_create(g_sess,link);
+	} else {
+		playlist = sp_session_starred_create(g_sess);
+	}
 
     int count = 0;
     while (!sp_playlist_is_loaded(playlist) && count < 4)
@@ -1412,24 +1418,32 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrievePlaylist (
         count++;
     }
 
-    if (count == 4)
+	if (count == 4)
     {
       log_warn("jahspotify","retrievePlaylist","Playlist not loaded after 1 second, will have to wait for callback");
       return NULL;
     }
 
-    playlistInstance = createJPlaylist(env, playlist);
-
+	playlistInstance = createJPlaylist(env, playlist);
     if (playlist)
-        sp_playlist_release(playlist);
+		sp_playlist_release(playlist);
     if (link)
         sp_link_release(link);
     if (nativeUri)
 		( *env )->ReleaseStringUTFChars ( env, uri, nativeUri );
 
-    return playlistInstance;
-
+	return playlistInstance;
 }
+
+static void SP_CALLCONV toplistCallback(sp_toplistbrowse *result, void *userdata) {
+	signalToplistComplete(result, (jobject) userdata);
+}
+JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTopList(JNIEnv *env, jobject obj, jint type) {
+	jobject searchResult = createSearchResult(env);
+	sp_toplistbrowse_create(g_sess, (int) type, SP_TOPLIST_REGION_EVERYWHERE, NULL, toplistCallback, searchResult);
+    return searchResult;
+}
+
 
 JNIEXPORT jobjectArray JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeReadTracks (JNIEnv *env, jobject obj, jobjectArray uris)
 {

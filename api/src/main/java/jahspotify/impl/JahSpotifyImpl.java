@@ -14,6 +14,7 @@ import jahspotify.media.ImageSize;
 import jahspotify.media.Link;
 import jahspotify.media.Playlist;
 import jahspotify.media.PlaylistContainer;
+import jahspotify.media.TopListType;
 import jahspotify.media.Track;
 import jahspotify.media.User;
 
@@ -350,11 +351,9 @@ public class JahSpotifyImpl implements JahSpotify
         _libSpotifyLock.lock();
         try
         {
-            final Playlist playlist = retrievePlaylist(uri.asString());
+            final Playlist playlist = retrievePlaylist(uri == null ? null : uri.asString());
             if (index == 0 && numEntries == 0 || playlist == null)
-            {
                 return playlist;
-            }
 
             // Trim the playlist accordingly now
             return trimPlaylist(playlist, index, numEntries);
@@ -363,6 +362,17 @@ public class JahSpotifyImpl implements JahSpotify
         {
             _libSpotifyLock.unlock();
         }
+    }
+
+    @Override
+	public SearchResult getTopList(TopListType type) {
+    	ensureLoggedIn();
+    	_libSpotifyLock.lock();
+    	try {
+    		return retrieveTopList(type.ordinal());
+    	} finally {
+    		_libSpotifyLock.unlock();
+    	}
     }
 
     private Playlist trimPlaylist(final Playlist playlist, final int index, final int numEntries)
@@ -561,6 +571,7 @@ public class JahSpotifyImpl implements JahSpotify
     private native Track retrieveTrack(String uri);
 
     private native Playlist retrievePlaylist(String uri);
+    private native SearchResult retrieveTopList(int type);
 
     private native int nativePlayTrack(String uri);
     private native void nativeStopTrack();
