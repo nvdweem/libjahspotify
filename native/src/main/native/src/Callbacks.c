@@ -710,7 +710,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 	for (index = 0; index < numResultsFound; index++)
 	{
 		sp_track *track = sp_toplistbrowse_track(result, index);
-		if (track)
+		if (track && sp_track_get_availability(g_sess, track) == SP_TRACK_AVAILABILITY_AVAILABLE)
 		{
 			sp_track_add_ref(track);
 	          
@@ -740,7 +740,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 	for (index = 0; index < numResultsFound; index++)
 	{
 		sp_album *album = sp_toplistbrowse_album(result, index);
-		if (album)
+		if (album && sp_album_is_available(album))
 		{
 			sp_album_add_ref(album);
 
@@ -841,7 +841,7 @@ int signalSearchComplete(sp_search *search, int32_t token)
   for (index = 0; index < numResultsFound; index++)
   {
       sp_track *track = sp_search_track(search, index);
-      if (track)
+	  if (track && sp_track_get_availability(g_sess, track) == SP_TRACK_AVAILABILITY_AVAILABLE)
       {
           sp_track_add_ref(track);
           
@@ -873,7 +873,7 @@ int signalSearchComplete(sp_search *search, int32_t token)
   for (index = 0; index < numResultsFound; index++)
   {
       sp_album *album = sp_search_album(search, index);
-      if (album)
+	  if (album && sp_album_is_available(album))
       {
           sp_album_add_ref(album);
           

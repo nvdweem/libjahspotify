@@ -1105,7 +1105,7 @@ void populateJArtistInstanceFromArtistBrowse(JNIEnv *env, sp_artistbrowse *artis
     for (count = 0; count < numAlbums; count++)
     {
       sp_album *album = sp_artistbrowse_album(artistBrowse,count);
-      if (album)
+      if (album && sp_album_is_available(album))
       {
         sp_album_add_ref(album);
         sp_link *albumLink = sp_link_create_from_album(album);
@@ -1138,7 +1138,7 @@ void populateJArtistInstanceFromArtistBrowse(JNIEnv *env, sp_artistbrowse *artis
     for (count = 0; count < numTopTracks; count++)
     {
       sp_track *track = sp_artistbrowse_tophit_track(artistBrowse,count);
-      if (track)
+      if (track && sp_track_get_availability(g_sess, track) == SP_TRACK_AVAILABILITY_AVAILABLE)
       {
         sp_track_add_ref(track);
         sp_link *trackLink = sp_link_create_from_track(track,0);
@@ -1260,7 +1260,7 @@ jobject createJPlaylist(JNIEnv *env, sp_playlist *playlist)
     for (trackCounter = 0 ; trackCounter < numTracks; trackCounter++)
     {
         sp_track *track = sp_playlist_track(playlist,trackCounter);
-        if (track)
+        if (track && sp_track_get_availability(g_sess, track) == SP_TRACK_AVAILABILITY_AVAILABLE)
         {
             sp_track_add_ref(track);
             sp_link *trackLink = sp_link_create_from_track(track, 0);
