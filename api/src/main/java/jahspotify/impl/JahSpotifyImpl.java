@@ -149,6 +149,14 @@ public class JahSpotifyImpl implements JahSpotify
                 }
 				return highestReturn;
 			}
+
+			@Override
+			public void playTokenLost() {
+                for (PlaybackListener listener : _playbackListeners)
+                {
+                    listener.playTokenLost();
+                }
+			}
         });
 
         registerNativeSearchCompleteListener(new NativeSearchCompleteListener()

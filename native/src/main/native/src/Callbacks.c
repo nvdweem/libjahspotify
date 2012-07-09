@@ -320,6 +320,41 @@ exit:
     result = detachThread();        
 }
 
+void signalPlayTokenLost() {
+	JNIEnv* env = NULL;
+    int result;
+    jclass aClass;
+    jmethodID method;
+    
+    if (!g_playbackListener)
+    {
+        log_error("callbacks","signalPlayTokenLost","No playback listener"); 
+        return ;
+    }
+    
+    if (!retrieveEnv((JNIEnv*)&env))
+    {
+        goto fail;
+    }
+    
+    method = (*env)->GetMethodID(env, g_playbackListenerClass, "playTokenLost", "()V");
+    if (method == NULL)
+    {
+        log_error("callbacks","signalPlayTokenLost","Could not load callback method trackStarted() on class jahnotify.PlaybackListener");
+        goto fail;
+    }
+    
+    (*env)->CallVoidMethod(env, g_playbackListener, method);
+    checkException(env);
+    goto exit;
+    
+fail:
+    log_error("callbacks","signalPlayTokenLost","Error during callback");
+        
+exit:
+    result = detachThread();    
+}
+
 int signalArtistBrowseLoaded(sp_artistbrowse *artistBrowse, jobject artistInstance)
 {
     JNIEnv* env = NULL;

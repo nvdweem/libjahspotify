@@ -18,6 +18,7 @@ int signalEndFolderSeen();
 
 int signalTrackEnded(char *uri, bool forcedTrackEnd);
 int signalTrackStarted(char *uri);
+void signalPlayTokenLost();
 int signalPlaylistSeen(const char *playlistName, char *linkName);
 
 int signalSearchComplete(sp_search *search, int32_t token);

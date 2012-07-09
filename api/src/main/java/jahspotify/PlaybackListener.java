@@ -10,6 +10,7 @@ public interface PlaybackListener
     public void trackStarted(Link link);
     public void trackEnded(Link link, boolean forcedEnd);
     public Link nextTrackToPreload();
+    public void playTokenLost();
 
     public void setAudioFormat(int rate, int channels);
     public int addToBuffer(byte[] buffer);

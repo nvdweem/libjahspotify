@@ -102,6 +102,14 @@ public class MediaPlayer implements PlaybackListener {
 	}
 
 	/**
+	 * Pause the player if the play token was lost.
+	 */
+	@Override
+	public void playTokenLost() {
+		if (isPlaying()) pause();
+	}
+
+	/**
 	 * Toggle playing state.
 	 */
 	public void pause() {

@@ -369,11 +369,7 @@ static void SP_CALLCONV metadata_updated ( sp_session *sess )
 static void SP_CALLCONV play_token_lost ( sp_session *sess )
 {
     log_error("jahspotify","play_token_lost","Play token lost" );
-    if ( g_currenttrack != NULL )
-    {
-        sp_session_player_unload ( g_sess );
-        g_currenttrack = NULL;
-    }
+	signalPlayTokenLost();
 }
 
 static void SP_CALLCONV userinfo_updated (sp_session *sess)
