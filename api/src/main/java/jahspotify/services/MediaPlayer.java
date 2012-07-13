@@ -23,6 +23,7 @@ public class MediaPlayer implements PlaybackListener {
 	private transient final JahSpotify spotify = JahSpotifyImpl.getInstance();
 	private static final int MAX_HISTORY = 50;
 
+	private List<MediaStreamer> streamers = new ArrayList<MediaStreamer>();
 	private List<Queue<Link>> queues = new ArrayList<Queue<Link>>();
 	private List<Track> history = new ArrayList<Track>();
 	private int rate = 0, channels = 0;
@@ -167,7 +168,22 @@ public class MediaPlayer implements PlaybackListener {
 			return 0;
 		int bufferSize = buffer.length;
 		int toWrite = Math.min(available, bufferSize);
-		return audio.write(buffer, 0, toWrite) / 4;
+		int written = audio.write(buffer, 0, toWrite);
+
+		try {
+			for (MediaStreamer streamer : new ArrayList<MediaStreamer>(streamers)) {
+				try {
+					streamer.addToBuffer(buffer, written);
+				} catch (Throwable t) {
+					// Remove failing streamer.
+					streamers.remove(streamer);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return written / 4;
 	}
 
 	/**
@@ -189,6 +205,17 @@ public class MediaPlayer implements PlaybackListener {
 					format.getSampleRate(), format.getSampleSizeInBits(),
 					format.getChannels(), format.getFrameSize(),
 					format.getFrameRate(), false);
+
+			synchronized(streamers) {
+				for (MediaStreamer streamer : streamers) {
+					try {
+						streamer.setAudioFormat(format);
+					} catch (Throwable t) {
+						// Remove failing streamer.
+						streamers.remove(streamer);
+					}
+				}
+			}
 
 			audio = AudioSystem.getSourceDataLine(format);
 			audio.open(format, rate * 4);
@@ -292,6 +319,19 @@ public class MediaPlayer implements PlaybackListener {
 	}
 	public void removeQueue(Queue<Link> queue) {
 		queues.remove(queue);
+	}
+
+	public void addStreamer(MediaStreamer streamer) {
+		synchronized(streamers) {
+			streamers.add(streamer);
+			if (audio != null)
+				streamer.setAudioFormat(audio.getFormat());
+		}
+	}
+	public void removeStreamer(MediaStreamer streamer) {
+		synchronized(streamers) {
+			streamers.remove(streamer);
+		}
 	}
 
 }
