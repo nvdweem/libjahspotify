@@ -9,6 +9,7 @@ int signalLoggedIn(int loggedIn);
 int signalConnected();
 int signalDisconnected();
 int signalLoggedOut();
+void signalBlobUpdated(const char* blob);
 
 int signalStartFolderSeen(char *folderName, uint64_t folderId);
 int signalSynchStarting(int numPlaylists);

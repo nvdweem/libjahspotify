@@ -35,7 +35,7 @@ public interface JahSpotify
      * @param username Username to use for login.
      * @param password The password for the specified username.
      */
-    public void login(String username, String password, boolean savePassword);
+    public void login(String username, String password, String blob, boolean savePassword);
 
     /** Read the information for the specified artist.
      *

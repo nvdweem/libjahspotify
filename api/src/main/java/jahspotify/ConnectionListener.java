@@ -9,4 +9,5 @@ public interface ConnectionListener
     public void disconnected();
     public void loggedIn();
     public void loggedOut();
+    public void blobUpdated(String blob);
 }

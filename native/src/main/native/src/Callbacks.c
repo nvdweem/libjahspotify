@@ -211,6 +211,52 @@ int signalLoggedIn(int loggedIn)
     
 }
 
+void signalBlobUpdated(const char* blob) {
+	JNIEnv* env = NULL;
+    jclass aClass;
+    jmethodID method;
+	jstring blobStr = NULL;
+    
+    if (!g_connectionListener) {
+        log_error("jahspotify","signalLoggedIn","No connection listener registered");
+        return;
+    }
+    
+    if (!retrieveEnv((JNIEnv*)&env))
+    {
+        goto fail;
+    }
+    
+    method = (*env)->GetMethodID(env, g_connectionListenerClass, "blobUpdated", "(Ljava/lang/String;)V");
+    if (method == NULL)
+    {
+        log_error("callbacks","signalBlobUpdated","Could not load callback method blobUpdated() on class ConnectionListener");
+        goto fail;
+    }
+    
+	blobStr = (*env)->NewStringUTF(env,blob);
+    
+
+    (*env)->CallVoidMethod(env, g_connectionListener, method, blobStr);
+    if (checkException(env) != 0)
+    {
+        log_error("callbacks","signalLoggedIn","Exception while calling listener");
+        goto fail;
+    }
+    
+    goto exit;
+    
+    fail:
+    log_error("callbacks","signalLoggedIn","Error during callback");
+    
+	exit:
+
+	if (blobStr) 
+        (*env)->DeleteLocalRef(env, blobStr);
+
+    detachThread();
+}
+
 int signalTrackEnded(char *uri, bool forcedTrackEnd)
 {
   if (!g_playbackListener)

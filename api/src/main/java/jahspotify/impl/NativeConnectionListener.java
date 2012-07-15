@@ -6,10 +6,8 @@ package jahspotify.impl;
 public interface NativeConnectionListener
 {
     public void connected();
-
     public void disconnected();
-
     public void loggedIn(boolean success);
-
     public void loggedOut();
+    public void blobUpdated(String blob);
 }

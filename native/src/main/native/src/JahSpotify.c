@@ -54,6 +54,7 @@ static pthread_cond_t g_notify_cond;
 static int g_notify_do;
 /// Non-zero when a track has ended and a new one has not yet started a new one
 static int g_playback_done;
+static int g_stop_after_logout = 0;
 static int g_stop = 0;
 
 static bool g_audio_initialized = JNI_FALSE;
@@ -280,10 +281,21 @@ static void SP_CALLCONV logged_in ( sp_session *sess, sp_error error )
     log_debug("jahspotify","logged_in","All done");
 }
 
+static void SP_CALLCONV credentials_blob_updated(sp_session *session, const char *blob) {
+	signalBlobUpdated(blob);
+}
+
 static void SP_CALLCONV logged_out ( sp_session *sess )
 {
     log_debug("jahspotify","logged_out","Logged out");
     signalLoggedOut();
+	if (g_stop_after_logout) {
+	    pthread_mutex_lock ( &g_notify_mutex );
+	    g_stop = 1;
+		g_notify_do = 1;
+	    pthread_cond_signal ( &g_notify_cond );
+	    pthread_mutex_unlock ( &g_notify_mutex );
+	}
 }
 
 
@@ -437,7 +449,8 @@ static sp_session_callbacks session_callbacks =
     .userinfo_updated = &userinfo_updated,
     .connection_error = &connection_error,
     .streaming_error = &streaming_error,
-    .start_playback = &start_playback
+    .start_playback = &start_playback,
+	.credentials_blob_updated = &credentials_blob_updated
 };
 
 
@@ -1748,50 +1761,53 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIE
     }
 
 	log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Cleaning up.");
+	sp_session_release(g_sess);
+
 	if (nativeCacheFolder)
 		(*env)->ReleaseStringUTFChars(env, cacheFolder, nativeCacheFolder);
-
-	//sp_session_player_unload(g_sess);
-	//sp_session_logout(g_sess);
-	sp_session_release(g_sess);
 }
 
-JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogin ( JNIEnv *env, jobject obj, jstring username, jstring password, jboolean savePassword )
+JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogin ( JNIEnv *env, jobject obj, jstring username, jstring password, jstring blob, jboolean savePassword )
 {
 	sp_error err;
 	uint8_t *nativePassword = NULL;
     uint8_t *nativeUsername = NULL;
+	uint8_t *nativeBlob = NULL;
 
-    if ( !username || !password )
+	if ( !username && (!password || !blob))
     {
 		log_error("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Try to login without username and/or password." );
 		err = sp_session_relogin(g_sess);
 
 		if (err == SP_ERROR_NO_CREDENTIALS) {
 			log_error("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Username or password not specified and not remembered." );
-			pthread_mutex_unlock(&g_notify_mutex);
 			return 1;
 		}
     } else {
 	    nativeUsername = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, username, NULL );
-		nativePassword = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, password, NULL );
+		if (password)
+			nativePassword = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, password, NULL );
+		if (blob)
+			nativeBlob = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, blob, NULL );
 
 		log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Locking");
-		log_debug("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Initiating login: %s", nativeUsername, nativePassword );
-		sp_session_login ( g_sess, nativeUsername, nativePassword,savePassword == JNI_TRUE ? 1 : 0,NULL);
+		log_debug("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Initiating login: %s", nativeUsername);
+		if (savePassword == JNI_TRUE)
+			log_debug("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Going to remember this user.");
+		sp_session_login ( g_sess, nativeUsername, nativePassword, savePassword == JNI_TRUE ? 1 : 0, nativeBlob);
 	}
 
     if (nativeUsername)
 		(*env)->ReleaseStringUTFChars(env, username, nativeUsername);
 	if (nativePassword)
 		(*env)->ReleaseStringUTFChars(env, password, nativePassword);
+	if (nativeBlob)
+		(*env)->ReleaseStringUTFChars(env, blob, nativeBlob);
 
     return 0;
 }
 
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeDestroy(JNIEnv *env, jobject obj) {
-	pthread_mutex_lock ( &g_notify_mutex );
-    g_stop = 1;
-    pthread_cond_signal ( &g_notify_cond );
-    pthread_mutex_unlock ( &g_notify_mutex );
+	g_stop_after_logout = 1;
+	sp_session_logout(g_sess);
 }

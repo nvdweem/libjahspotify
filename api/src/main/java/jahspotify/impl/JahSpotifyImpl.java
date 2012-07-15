@@ -221,6 +221,12 @@ public class JahSpotifyImpl implements JahSpotify
                 _log.debug("Logged out");
                 _loggedIn = false;
             }
+
+			@Override
+			public void blobUpdated(String blob) {
+				for (ConnectionListener listener : _connectionListeners)
+                    listener.blobUpdated(blob);
+			}
         });
     }
 
@@ -276,7 +282,7 @@ public class JahSpotifyImpl implements JahSpotify
     }
 
     @Override
-    public void login(final String username, final String password, final boolean savePassword)
+    public void login(final String username, final String password, final String blob, final boolean savePassword)
     {
     	if (!initialized)
     		throw new IllegalStateException("You should initialize libJah'Spotify before attempting to login.");
@@ -285,7 +291,7 @@ public class JahSpotifyImpl implements JahSpotify
         _libSpotifyLock.lock();
         try {
         	_loggingIn = true;
-        	nativeLogin(username, password, savePassword);
+        	nativeLogin(username, password, blob, savePassword);
         } finally {
             _libSpotifyLock.unlock();
         }
@@ -594,7 +600,7 @@ public class JahSpotifyImpl implements JahSpotify
 
     private native int nativeInitialize(String cacheFolder);
     private native int nativeDestroy();
-	private native int nativeLogin(String username, String password, boolean savePassword);
+	private native int nativeLogin(String username, String password, String blob, boolean savePassword);
 
     private native boolean registerNativeMediaLoadedListener(final NativeMediaLoadedListener nativeMediaLoadedListener);
 
