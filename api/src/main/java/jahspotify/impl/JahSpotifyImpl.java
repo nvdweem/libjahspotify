@@ -229,13 +229,14 @@ public class JahSpotifyImpl implements JahSpotify
         if (_jahSpotifyThread != null)
             return;
 
-        _jahSpotifyThread = new Thread()
+        _jahSpotifyThread = new Thread("libJahSpotify native message handler")
         {
             @Override
             public void run()
             {
             	initialized = true;
             	nativeInitialize(cacheFolder);
+            	initialized = false;
             }
         };
         _jahSpotifyThread.start();
