@@ -129,13 +129,6 @@ public class Link implements Comparable<Link>, Serializable
     private static final Pattern jahMP3Pattern = Pattern.compile("jahspotify:mp3:([^\\s]+)");
 
     /**
-     * A regular expression to match Spotify folder URIs:
-     * <p/>
-     * <pre>jahspotify:folder:([^\\s]+)</pre>
-     */
-    private static final Pattern jahFolderPattern = Pattern.compile("jahspotify:folder:(ROOT|([0-9A-Za-z]{16}))");
-
-    /**
      * A regular expression to match local URIs:
      * <p/>
      * <pre>jahspotify:folder:([^\\s]+)</pre>
@@ -210,7 +203,6 @@ public class Link implements Comparable<Link>, Serializable
         Matcher jahQueueMatcher = jahQueuePattern.matcher(uri);
         Matcher jahPodcastMatcher = jahPodcastPattern.matcher(uri);
         Matcher jahMp3Matcher = jahMP3Pattern.matcher(uri);
-        Matcher jahFolderMatcher = jahFolderPattern.matcher(uri);
         Matcher localMatcher = localPattern.matcher(uri);
         Matcher userMatcher = userPattern.matcher(uri);
 
