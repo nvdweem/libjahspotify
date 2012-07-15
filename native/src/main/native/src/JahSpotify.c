@@ -54,6 +54,7 @@ static pthread_cond_t g_notify_cond;
 static int g_notify_do;
 /// Non-zero when a track has ended and a new one has not yet started a new one
 static int g_playback_done;
+static int g_stop = 0;
 
 static bool g_audio_initialized = JNI_FALSE;
 
@@ -254,17 +255,17 @@ static sp_playlistcontainer_callbacks pc_callbacks =
  */
 static void SP_CALLCONV logged_in ( sp_session *sess, sp_error error )
 {
+	if ( SP_ERROR_OK != error )
+    {
+        log_error("jahspotify","logged_in","Login failed: %s", sp_error_message ( error ) );
+		signalLoggedIn(0);
+        return;
+    }
+
     sp_playlistcontainer *pc = sp_session_playlistcontainer ( sess );
     int i;
 
     sp_playlistcontainer_add_callbacks ( sp_session_playlistcontainer ( g_sess ),&pc_callbacks,NULL );
-
-
-    if ( SP_ERROR_OK != error )
-    {
-        log_error("jahspotify","logged_in","Login failed: %s", sp_error_message ( error ) );
-        exit ( 2 );
-    }
 
     log_debug("jahspotify","logged_in","Login Success: %d", sp_playlistcontainer_num_playlists(pc));
 
@@ -274,7 +275,7 @@ static void SP_CALLCONV logged_in ( sp_session *sess, sp_error error )
         sp_playlist_add_callbacks(pl, &pl_callbacks, NULL);
     }
 
-    signalLoggedIn();
+    signalLoggedIn(1);
 
     log_debug("jahspotify","logged_in","All done");
 }
@@ -1655,60 +1656,37 @@ static void track_ended(void)
     }
 }
 
-JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_initialize ( JNIEnv *env, jobject obj, jstring tempfolder, jstring username, jstring password )
-{
-    sp_session *sp;
+JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIEnv *env, jobject obj, jstring cacheFolder) {
+	sp_session *sp;
     sp_error err;
-    uint8_t *nativePassword = NULL;
-    uint8_t *nativeUsername = NULL;
     int next_timeout = 0;
-
-    if ( !username || !password )
-    {
-        log_error("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Username or password not specified" );
-        return 1;
-    }
 
 	pthread_mutex_init ( &g_notify_mutex, NULL );
     pthread_cond_init ( &g_notify_cond, NULL );
-	 
-    /* Create session */
-	const char* nativeTempFolder = ( *env )->GetStringUTFChars ( env, tempfolder, NULL );
-	char cache[strlen(nativeTempFolder) + 7];
-	strcpy(cache, nativeTempFolder);
-	strcat(cache, "/cache");
 
-	spconfig.cache_location = cache; // set in main
-    spconfig.settings_location = nativeTempFolder; // set in main
-	if (nativeTempFolder)
-		(*env)->ReleaseStringUTFChars(env, tempfolder, nativeTempFolder);
+	const char* nativeCacheFolder = ( *env )->GetStringUTFChars ( env, cacheFolder, NULL );
 
-    spconfig.application_key_size = g_appkey_size;
+	log_error("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Using the following cache and setting location: %s\n", nativeCacheFolder);
+	spconfig.cache_location = nativeCacheFolder;
+	spconfig.settings_location = nativeCacheFolder;
+
+	/* Create session */
+	spconfig.application_key_size = g_appkey_size;
     err = sp_session_create ( &spconfig, &sp );
-
-    if ( SP_ERROR_OK != err )
+	
+	if ( SP_ERROR_OK != err )
     {
         log_error("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Unable to create session: %s\n",sp_error_message ( err ) );
         return 1;
     }
+	g_sess = sp;
+	sp_session_set_volume_normalization(g_sess, 1);
+	log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Session created 0x%x", sp);
+	
+	pthread_mutex_lock ( &g_notify_mutex );
 
-    log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Session created 0x%x", sp);
-
-    nativeUsername = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, username, NULL );
-    nativePassword = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, password, NULL );
-
-    log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Locking");
-
-    g_sess = sp;
-
-
-    log_debug("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Initiating login: %s", nativeUsername );
-
-    sp_session_login ( sp, nativeUsername, nativePassword,0,NULL);
-
-    pthread_mutex_lock ( &g_notify_mutex );
-
-    for ( ;; )
+	g_stop = 0;
+	for ( ;; )
     {
         if ( next_timeout == 0 )
         {
@@ -1754,7 +1732,7 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_initialize ( JNIEnv *
             break;
         case SP_CONNECTION_STATE_DISCONNECTED:
             log_warn ("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize", "Disconnected!");
-      signalDisconnected();
+			signalDisconnected();
             break;
         }
 
@@ -1765,13 +1743,55 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_initialize ( JNIEnv *
         }
         while ( next_timeout == 0 );
 
+		if (g_stop) break;
         pthread_mutex_lock ( &g_notify_mutex );
     }
 
-    // FIXME: Release the username/password allocated?
+	log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Cleaning up.");
+	if (nativeCacheFolder)
+		(*env)->ReleaseStringUTFChars(env, cacheFolder, nativeCacheFolder);
 
-    return 0;
-
+	//sp_session_player_unload(g_sess);
+	//sp_session_logout(g_sess);
+	sp_session_release(g_sess);
 }
 
+JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogin ( JNIEnv *env, jobject obj, jstring username, jstring password, jboolean savePassword )
+{
+	sp_error err;
+	uint8_t *nativePassword = NULL;
+    uint8_t *nativeUsername = NULL;
 
+    if ( !username || !password )
+    {
+		log_error("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Try to login without username and/or password." );
+		err = sp_session_relogin(g_sess);
+
+		if (err == SP_ERROR_NO_CREDENTIALS) {
+			log_error("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Username or password not specified and not remembered." );
+			pthread_mutex_unlock(&g_notify_mutex);
+			return 1;
+		}
+    } else {
+	    nativeUsername = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, username, NULL );
+		nativePassword = ( uint8_t * ) ( *env )->GetStringUTFChars ( env, password, NULL );
+
+		log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize","Locking");
+		log_debug("jahspotify","Java_jahspotify_impl_JahSpotifyImpl_initialize","Initiating login: %s", nativeUsername, nativePassword );
+		sp_session_login ( g_sess, nativeUsername, nativePassword,savePassword == JNI_TRUE ? 1 : 0,NULL);
+	}
+
+    if (nativeUsername)
+		(*env)->ReleaseStringUTFChars(env, username, nativeUsername);
+	if (nativePassword)
+		(*env)->ReleaseStringUTFChars(env, password, nativePassword);
+
+    return 0;
+}
+
+JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeDestroy(JNIEnv *env, jobject obj) {
+	pthread_mutex_lock ( &g_notify_mutex );
+    g_stop = 1;
+    pthread_cond_signal ( &g_notify_cond );
+    pthread_mutex_unlock ( &g_notify_mutex );
+}

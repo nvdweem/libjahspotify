@@ -39,7 +39,9 @@ public class JahSpotifyImpl implements JahSpotify
     private Lock _libSpotifyLock = new ReentrantLock();
 
     private boolean _loggedIn = false;
+    private boolean _loggingIn = false;
     private boolean _connected;
+    private boolean initialized = false;
 
     private List<PlaybackListener> _playbackListeners = new ArrayList<PlaybackListener>();
     private List<ConnectionListener> _connectionListeners = new ArrayList<ConnectionListener>();
@@ -53,8 +55,6 @@ public class JahSpotifyImpl implements JahSpotify
     private boolean _synching = false;
     private User _user;
     private AtomicInteger _globalToken = new AtomicInteger(1);
-
-    private native int initialize(String tempfolder, String username, String password);
 
     private final PlaylistContainer playlistContainer = new PlaylistContainer();
 
@@ -202,11 +202,13 @@ public class JahSpotifyImpl implements JahSpotify
             }
 
             @Override
-            public void loggedIn()
+            public void loggedIn(boolean success)
             {
-                _log.debug("Logged in");
-                _loggedIn = true;
-                _connected = true;
+                _log.debug("Login result: " + success);
+                _loggedIn = success;
+                _connected = success;
+                _loggingIn = false;
+                if (!success) return;
                 for (ConnectionListener listener : _connectionListeners)
                 {
                     listener.loggedIn();
@@ -221,6 +223,29 @@ public class JahSpotifyImpl implements JahSpotify
             }
         });
     }
+
+    @Override
+	public synchronized void initialize(final String cacheFolder) {
+        if (_jahSpotifyThread != null)
+            return;
+
+        _jahSpotifyThread = new Thread()
+        {
+            @Override
+            public void run()
+            {
+            	initialized = true;
+            	nativeInitialize(cacheFolder);
+            }
+        };
+        _jahSpotifyThread.start();
+    }
+
+    @Override
+	public void destroy() {
+    	_jahSpotifyThread = null;
+    	nativeDestroy();
+	}
 
     @Override
 	public PlaylistContainer getPlaylistContainer() {
@@ -250,27 +275,17 @@ public class JahSpotifyImpl implements JahSpotify
     }
 
     @Override
-    public void login(final String tempFolder, final String username, final String password)
+    public void login(final String username, final String password, final boolean savePassword)
     {
+    	if (!initialized)
+    		throw new IllegalStateException("You should initialize libJah'Spotify before attempting to login.");
+    	_loggingIn = false;
+    	if (_loggingIn) return; // Still trying to login.
         _libSpotifyLock.lock();
-        try
-        {
-            if (_jahSpotifyThread != null)
-            {
-                return;
-            }
-            _jahSpotifyThread = new Thread()
-            {
-                @Override
-                public void run()
-                {
-                    initialize(tempFolder, username, password);
-                }
-            };
-            _jahSpotifyThread.start();
-        }
-        finally
-        {
+        try {
+        	_loggingIn = true;
+        	nativeLogin(username, password, savePassword);
+        } finally {
             _libSpotifyLock.unlock();
         }
     }
@@ -433,6 +448,16 @@ public class JahSpotifyImpl implements JahSpotify
     }
 
     @Override
+	public boolean isLoggedIn() {
+		return _loggedIn;
+	}
+
+    @Override
+	public boolean isLoggingIn() {
+    	return _loggingIn;
+    }
+
+    @Override
     public User getUser()
     {
         ensureLoggedIn();
@@ -566,6 +591,10 @@ public class JahSpotifyImpl implements JahSpotify
         int numArtists = 255;
     }
 
+    private native int nativeInitialize(String cacheFolder);
+    private native int nativeDestroy();
+	private native int nativeLogin(String username, String password, boolean savePassword);
+
     private native boolean registerNativeMediaLoadedListener(final NativeMediaLoadedListener nativeMediaLoadedListener);
 
     private native void readImage(String uri, Image image);
@@ -592,4 +621,5 @@ public class JahSpotifyImpl implements JahSpotify
     private native boolean nativeShutdown();
 
     private native boolean registerNativePlaybackListener(NativePlaybackListener playbackListener);
+
 }

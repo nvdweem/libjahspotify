@@ -168,7 +168,7 @@ int signalLoggedOut()
 {
 }
 
-int signalLoggedIn()
+int signalLoggedIn(int loggedIn)
 {
     JNIEnv* env = NULL;
     int result;
@@ -186,7 +186,7 @@ int signalLoggedIn()
         goto fail;
     }
     
-    method = (*env)->GetMethodID(env, g_connectionListenerClass, "loggedIn", "()V");
+    method = (*env)->GetMethodID(env, g_connectionListenerClass, "loggedIn", "(Z)V");
     
     if (method == NULL)
     {
@@ -194,7 +194,7 @@ int signalLoggedIn()
         goto fail;
     }
     
-    (*env)->CallVoidMethod(env, g_connectionListener, method);
+    (*env)->CallVoidMethod(env, g_connectionListener, method, loggedIn == 1 ? JNI_TRUE : JNI_FALSE);
     if (checkException(env) != 0)
     {
         log_error("callbacks","signalLoggedIn","Exception while calling listener");

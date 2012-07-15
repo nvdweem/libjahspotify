@@ -17,6 +17,17 @@ import jahspotify.media.User;
  */
 public interface JahSpotify
 {
+	/**
+	 * Initializes libJahSpotify.
+	 * @param cacheFolder
+	 */
+	public void initialize(String cacheFolder);
+
+	/**
+	 * Stops libJahSpotify.
+	 */
+	public void destroy();
+
     /** Logs into the Spotify system.  The specified account must be a Spotify premium account.
      * <br/>
      * Notifications of successful login will come via the {@link ConnectionListener} API.
@@ -24,7 +35,7 @@ public interface JahSpotify
      * @param username Username to use for login.
      * @param password The password for the specified username.
      */
-    public void login(String tempFolder, String username, String password);
+    public void login(String username, String password, boolean savePassword);
 
     /** Read the information for the specified artist.
      *
@@ -99,6 +110,17 @@ public interface JahSpotify
      * @return The currently logged in user or null if the user information can not be read.
      */
     public User getUser();
+
+    /**
+     * Returns true iff a user is logged in.
+     * @return
+     */
+    public boolean isLoggedIn();
+    /**
+     * Returns true iff an attempt to login is in progress.
+     * @return
+     */
+    public boolean isLoggingIn();
 
     /** Returns a flag reflecting the current state of the system, whether it is started or not.
      *

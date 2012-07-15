@@ -9,7 +9,7 @@ public interface NativeConnectionListener
 
     public void disconnected();
 
-    public void loggedIn();
+    public void loggedIn(boolean success);
 
     public void loggedOut();
 }

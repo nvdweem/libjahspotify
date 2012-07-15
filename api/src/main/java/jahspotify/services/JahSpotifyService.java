@@ -36,6 +36,7 @@ public class JahSpotifyService
     	if (tempFolder == null || !tempFolder.isDirectory() || !tempFolder.exists())
     		throw new RuntimeException("The tempfolder should be a directory and it should already exist.");
     	JahSpotifyService.tempFolder = tempFolder.getAbsolutePath();
+    	getInstance();
     }
 
     public JahSpotify createJahSpotify()
@@ -54,9 +55,8 @@ public class JahSpotifyService
         {
             _jahSpotify = JahSpotifyImpl.getInstance();
 
-            if (!_jahSpotify.isStarted())
-            {
-                _jahSpotify.login(tempFolder, System.getProperty("jahspotify.spotify.username"), System.getProperty("jahspotify.spotify.password"));
+            if (!_jahSpotify.isStarted()) {
+            	_jahSpotify.initialize(tempFolder);
             }
             _jahSpotify.addPlaybackListener(MediaPlayer.getInstance());
         }
