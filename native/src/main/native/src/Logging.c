@@ -50,7 +50,7 @@ exit:
 		(*env)->DeleteLocalRef(env, subComponentStr);
 	if (messageStr) 
 		(*env)->DeleteLocalRef(env, messageStr);
-
+	detachThread();
     return;   
     
 }

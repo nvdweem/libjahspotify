@@ -342,6 +342,7 @@ static int SP_CALLCONV music_delivery ( sp_session *sess, const sp_audioformat *
 	invokeIntMethod_B(env, g_playbackListener, "addToBuffer", &buffered, byteArray);
 
 	(*env)->DeleteLocalRef(env, byteArray);
+	detachThread();
 	return buffered;
 }
 
@@ -617,9 +618,11 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveUser (JNIE
         countryStr[0] = (byte)(country >> 8);
         countryStr[1] = (byte)country;
         setObjectStringField(env,userInstance,"country",countryStr);
-
+		
+		(*env)->DeleteLocalRef(env, userInstance);
         return userInstance;
     }
+	(*env)->DeleteLocalRef(env, userInstance);
 
     return NULL;
 

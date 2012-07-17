@@ -467,7 +467,6 @@ int signalArtistBrowseLoaded(sp_artistbrowse *artistBrowse, jobject artistInstan
  
 	setObjectBooleanField(env,artistInstance,"loaded",JNI_TRUE);
 	(*env)->CallVoidMethod(env, g_mediaLoadedListener, aMethod, 0, artistInstance);
-	(*env)->DeleteGlobalRef(env, artistInstance);
     if (checkException(env) != 0)
     {
       log_error("callbacks","signalArtistBrowseLoaded","Exception while calling callback");
@@ -481,10 +480,12 @@ fail:
    log_error("jahspotify","signalArtistBrowseLoaded","Error occurred while processing callback");
 
 exit:
+    (*env)->DeleteGlobalRef(env, artistInstance);
     if (artistBrowse)
     {
       sp_artistbrowse_release(artistBrowse);
     }
+	detachThread();
 }
 
 int signalImageLoaded(sp_image *image, jobject imageInstance)
@@ -521,7 +522,7 @@ int signalImageLoaded(sp_image *image, jobject imageInstance)
 
   size_t size;
   const void* pData = sp_image_data(image, &size);
-  jbyteArray byteArray = (*env)->NewByteArray(env, size );  // Release
+  jbyteArray byteArray = (*env)->NewByteArray(env, size );
   jboolean isCopy = 0;
   jbyte* pByteData = (*env)->GetByteArrayElements(env, byteArray, &isCopy );
   size_t i;
@@ -529,10 +530,11 @@ int signalImageLoaded(sp_image *image, jobject imageInstance)
     pByteData[i] = ( (byte*) pData)[i];
   (*env)->ReleaseByteArrayElements(env,byteArray, pByteData, 0);
   setObjectObjectField(env,imageInstance,"bytes","[B",byteArray);
+  (*env)->DeleteLocalRef(env, byteArray);
 
   setObjectBooleanField(env,imageInstance,"loaded",JNI_TRUE);
   (*env)->CallVoidMethod(env,g_mediaLoadedListener,method,0,jLink,NULL,NULL);
-  (*env)->DeleteGlobalRef(env,imageInstance);
+
   if (checkException(env) != 0)
   {
       log_error("callbacks","signalImageLoaded","Exception while calling listener");
@@ -546,8 +548,10 @@ int signalImageLoaded(sp_image *image, jobject imageInstance)
   fail:
   
   exit:
-  
+
+  (*env)->DeleteGlobalRef(env,imageInstance);
   sp_image_release(image);
+  detachThread();
 
     
 }
@@ -613,10 +617,7 @@ int signalPlaylistLoaded(sp_playlist *playlist, int32_t token)
   exit:
   
   sp_playlist_release(playlist);
-  
-  
-  
-  
+  detachThread();  
 }
 
 int signalAlbumBrowseLoaded(sp_albumbrowse *albumBrowse, jobject albumInstance)
@@ -682,7 +683,6 @@ int signalAlbumBrowseLoaded(sp_albumbrowse *albumBrowse, jobject albumInstance)
   
   (*env)->CallVoidMethod(env, g_mediaLoadedListener, aMethod, 0, albumInstance);
   setObjectBooleanField(env,albumInstance,"loaded",JNI_TRUE);
-  (*env)->DeleteGlobalRef(env, albumInstance);
 
   if (checkException(env) != 0)
   {
@@ -696,6 +696,7 @@ fail:
    
    
 exit:   
+  (*env)->DeleteGlobalRef(env, albumInstance);
   if (albumLink)
   {
     sp_link_release(albumLink);
@@ -709,6 +710,7 @@ exit:
   {
     sp_albumbrowse_release(albumBrowse);
   }
+  detachThread();
 }
 
 // int signalTrackLoaded(sp_track *track, int32_t token)
@@ -813,7 +815,8 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 			sp_track_release(track);
 		}
 	}
-	  
+	if (trackLinkCollection) (*env)->DeleteLocalRef(env, trackLinkCollection);
+
 	albumLinkCollection = createInstance(env,"java/util/ArrayList");
 	setObjectObjectField(env,nativeSearchResult,"albumsFound","Ljava/util/List;",albumLinkCollection);
 
@@ -843,8 +846,9 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 			sp_album_release(album);
 		}
 	}
+	if (albumLinkCollection) (*env)->DeleteLocalRef(env, albumLinkCollection);
 	  
-	  
+
 	artistLinkCollection = createInstance(env,"java/util/ArrayList");
 	setObjectObjectField(env,nativeSearchResult,"artistsFound","Ljava/util/List;",artistLinkCollection);
 	  
@@ -874,6 +878,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 			sp_artist_release(artist);
 		}
 	}
+	if (artistLinkCollection) (*env)->DeleteLocalRef(env, artistLinkCollection);
 
 	setObjectBooleanField(env,nativeSearchResult,"loaded",JNI_TRUE);
 	  
@@ -946,6 +951,7 @@ int signalSearchComplete(sp_search *search, int32_t token)
           
       }
   }
+  if (trackLinkCollection) (*env)->DeleteLocalRef(env, trackLinkCollection);
   
   albumLinkCollection = createInstance(env,"java/util/ArrayList");
   setObjectObjectField(env,nativeSearchResult,"albumsFound","Ljava/util/List;",albumLinkCollection);
@@ -978,6 +984,7 @@ int signalSearchComplete(sp_search *search, int32_t token)
           
       }
   }
+  if (albumLinkCollection) (*env)->DeleteLocalRef(env, albumLinkCollection);
   
   
   artistLinkCollection = createInstance(env,"java/util/ArrayList");
@@ -1011,7 +1018,8 @@ int signalSearchComplete(sp_search *search, int32_t token)
           
       }
   }
-  
+  if (artistLinkCollection) (*env)->DeleteLocalRef(env, artistLinkCollection);
+
   setObjectIntField(env,nativeSearchResult,"totalNumTracks",sp_search_total_tracks(search));
   setObjectIntField(env,nativeSearchResult,"trackOffset",sp_search_num_tracks(search));
   
