@@ -342,7 +342,6 @@ static int SP_CALLCONV music_delivery ( sp_session *sess, const sp_audioformat *
 	invokeIntMethod_B(env, g_playbackListener, "addToBuffer", &buffered, byteArray);
 
 	(*env)->DeleteLocalRef(env, byteArray);
-	detachThread();
 	return buffered;
 }
 
