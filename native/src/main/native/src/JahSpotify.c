@@ -492,7 +492,9 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitiateSearch(
   int32_t artistOffset;
   int32_t numTracks;
   int32_t trackOffset;
+  int32_t suggest;
   jint value;
+  jboolean bValue;
 
   *token = javaToken;
 
@@ -508,13 +510,16 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitiateSearch(
   numTracks = value;
   getObjectIntField(env,javaNativeSearchParameters,"trackOffset",&value);
   trackOffset = value;
+  getObjectBoolField(env, javaNativeSearchParameters, "suggest", &bValue);
+  suggest = bValue == JNI_TRUE ? 1 : 0;
 
   if (createNativeString(env, getObjectStringField(env, javaNativeSearchParameters,"_query"),&nativeQuery) != 1)
   {
       // FIXME: Handle error
   }
 
-  sp_search *search = sp_search_create(g_sess,nativeQuery,trackOffset,numTracks,albumOffset,numAlbums,artistOffset,numArtists,0,0,0,searchCompleteCallback,token);
+  sp_search_type type = suggest ? SP_SEARCH_SUGGEST : SP_SEARCH_STANDARD;
+  sp_search *search = sp_search_create(g_sess,nativeQuery,trackOffset,numTracks,albumOffset,numAlbums,artistOffset,numArtists,0,0,type,searchCompleteCallback,token);
 
 }
 

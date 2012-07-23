@@ -16,6 +16,7 @@ jint setObjectObjectField(JNIEnv * env, jobject obj,const char *name, char *fiel
 jint getObjectLongField(JNIEnv * env, jobject obj, const char *name, jlong *value);
 jstring getObjectStringField(JNIEnv * env, jobject obj, const char *name);
 jint getObjectIntField(JNIEnv * env, jobject obj, const char *name, jint *value);
+jint getObjectBoolField(JNIEnv * env, jobject obj, const char *name, jboolean *value);
 
 jobject createInstance(JNIEnv *env, char *className);
 jobject createInstanceFromJClass(JNIEnv *env, jclass jClass);

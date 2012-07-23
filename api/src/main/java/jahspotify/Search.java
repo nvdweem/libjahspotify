@@ -5,16 +5,17 @@ package jahspotify;
  */
 public class Search
 {
-    int trackOffset = 0;
-    int numTracks = 255;
+	private int trackOffset = 0;
+	private int numTracks = 255;
 
-    int albumOffset = 0;
-    int numAlbums = 255;
+	private int albumOffset = 0;
+	private int numAlbums = 255;
 
-    int artistOffset = 0;
-    int numArtists = 255;
+	private int artistOffset = 0;
+	private int numArtists = 255;
 
-    Query _query;
+	private Query _query;
+	private boolean suggest;
 
     public Search(final Query query)
     {
@@ -137,7 +138,15 @@ public class Search
         return true;
     }
 
-    @Override
+    public boolean isSuggest() {
+		return suggest;
+	}
+
+	public void setSuggest(boolean suggest) {
+		this.suggest = suggest;
+	}
+
+	@Override
     public int hashCode()
     {
         int result = trackOffset;
@@ -147,6 +156,7 @@ public class Search
         result = 31 * result + artistOffset;
         result = 31 * result + numArtists;
         result = 31 * result + (_query != null ? _query.hashCode() : 0);
+        result = 31 * result + (suggest ? 1 : 0);
         return result;
     }
 }

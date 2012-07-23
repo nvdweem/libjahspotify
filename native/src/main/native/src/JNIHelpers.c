@@ -322,6 +322,26 @@ jint getObjectIntField(JNIEnv * env, jobject obj, const char *name, jint *value)
     return 0;
 }
 
+jint getObjectBoolField(JNIEnv * env, jobject obj, const char *name, jboolean *value)
+{
+    jclass clazz;
+    jfieldID field;
+
+    clazz = (*env)->GetObjectClass(env, obj);
+    if (clazz == NULL)
+        return 1;
+
+    field = (*env)->GetFieldID(env, clazz, name, "Z");
+    (*env)->DeleteLocalRef(env, clazz);
+
+    if (field == NULL)
+        return 1;
+
+    *value = (*env)->GetBooleanField(env, obj, field);
+
+    return 0;
+}
+
 int retrieveEnv(JNIEnv* env)
 {
     JNIEnv* myEnv = NULL;

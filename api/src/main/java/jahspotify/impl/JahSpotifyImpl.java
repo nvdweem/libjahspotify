@@ -581,12 +581,14 @@ public class JahSpotifyImpl implements JahSpotify
         nativeSearchParameters.numAlbums = search.getNumAlbums();
         nativeSearchParameters.numArtists = search.getNumArtists();
         nativeSearchParameters.numTracks = search.getNumTracks();
+        nativeSearchParameters.suggest = search.isSuggest();
         return nativeSearchParameters;
     }
 
     public static class NativeSearchParameters
     {
         String _query;
+        boolean suggest;
 
         int trackOffset = 0;
         int numTracks = 255;
