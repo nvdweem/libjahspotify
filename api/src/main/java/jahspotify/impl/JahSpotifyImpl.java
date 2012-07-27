@@ -421,7 +421,13 @@ public class JahSpotifyImpl implements JahSpotify
 				if (!MediaHelper.waitFor(artist, 2)) break;
 				List<Link> links = artist.getPortraits();
 				if (links.size() > 0) return links.get(0);
-				return null;
+
+				// No artist image available. Get an album cover.
+				artist = readArtist(link, 1);
+				MediaHelper.waitFor(artist, 2);
+				if (artist.getAlbums() == null || artist.getAlbums().size() == 0)
+					return null;
+				return readAlbum(artist.getAlbums().get(0)).getCover();
 			case TRACK:
 				Track t = readTrack(link);
 				return JahSpotifyService.getInstance().getJahSpotify().readAlbum(t.getAlbum()).getCover();
