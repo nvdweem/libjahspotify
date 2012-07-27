@@ -622,8 +622,6 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveUser (JNIE
         countryStr[0] = (byte)(country >> 8);
         countryStr[1] = (byte)country;
         setObjectStringField(env,userInstance,"country",countryStr);
-		
-		(*env)->DeleteLocalRef(env, userInstance);
         return userInstance;
     }
 	(*env)->DeleteLocalRef(env, userInstance);
@@ -1812,6 +1810,14 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogin ( JNIEnv 
 		(*env)->ReleaseStringUTFChars(env, blob, nativeBlob);
 
     return 0;
+}
+
+JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogout(JNIEnv *env, jobject obj) {
+	sp_session_logout(g_sess);
+}
+
+JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeForgetMe(JNIEnv *env, jobject obj) {
+	sp_session_forget_me(g_sess);
 }
 
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeDestroy(JNIEnv *env, jobject obj) {

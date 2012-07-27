@@ -44,6 +44,24 @@ jint detachThread()
   return 0;
 }
 
+jint invokeVoidMethod(JNIEnv *env, jobject instance, const char *methodName)
+{
+	jclass clazz;
+    jmethodID methodId;
+
+    clazz = (*env)->GetObjectClass(env, instance);
+    if (clazz == NULL)
+        return 1;
+
+    methodId = (*env)->GetMethodID(env, clazz, methodName, "()V");
+	(*env)->DeleteLocalRef(env, clazz);
+
+    if (methodId == NULL)
+        return 1;
+	(*env)->CallVoidMethod(env, instance, methodId);
+    return 0;
+}
+
 jint invokeVoidMethod_II(JNIEnv *env, jobject instance, const char *methodName, jint arg1, jint arg2)
 {
 	jclass clazz;

@@ -37,6 +37,16 @@ public interface JahSpotify
      */
     public void login(String username, String password, String blob, boolean savePassword);
 
+    /**
+     * Logout the current user.
+     */
+    public void logout();
+
+    /**
+     * Forgets the currently remembered user.
+     */
+    public void forgetMe();
+
     /** Read the information for the specified artist.
      *
      * @param link The link for the artist in question

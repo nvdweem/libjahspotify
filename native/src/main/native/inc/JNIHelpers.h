@@ -21,6 +21,7 @@ jint getObjectBoolField(JNIEnv * env, jobject obj, const char *name, jboolean *v
 jobject createInstance(JNIEnv *env, char *className);
 jobject createInstanceFromJClass(JNIEnv *env, jclass jClass);
 
+jint invokeVoidMethod(JNIEnv *env, jobject instance, const char *methodName);
 jint invokeVoidMethod_II(JNIEnv *env, jobject instance, const char *methodName, jint arg1, jint arg2);
 jint invokeIntMethod_B(JNIEnv *env, jobject instance, const char *methodName, int *returnValue, jbyteArray arr);
 

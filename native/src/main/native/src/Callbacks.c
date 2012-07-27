@@ -166,6 +166,21 @@ int signalDisconnected()
 
 int signalLoggedOut()
 {
+	JNIEnv* env = NULL;
+    int result;
+    
+    if (!retrieveEnv((JNIEnv*)&env))
+    {
+        goto fail;
+    }
+    invokeVoidMethod(env, g_connectionListener, "loggedOut");
+    goto exit;
+    
+    fail:
+    log_error("callbacks","signalLoggedOut","Error during callback");
+    
+    exit:
+    detachThread();
 }
 
 int signalLoggedIn(int loggedIn)

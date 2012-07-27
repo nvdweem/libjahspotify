@@ -297,6 +297,26 @@ public class JahSpotifyImpl implements JahSpotify
         }
     }
 
+	@Override
+	public void logout() {
+		_libSpotifyLock.lock();
+    	try {
+        	nativeLogout();
+        } finally {
+            _libSpotifyLock.unlock();
+        }
+	}
+
+    @Override
+	public void forgetMe() {
+    	_libSpotifyLock.lock();
+    	try {
+        	nativeForgetMe();
+        } finally {
+            _libSpotifyLock.unlock();
+        }
+	}
+
     @Override
     public Album readAlbum(final Link uri)
     {
@@ -603,6 +623,8 @@ public class JahSpotifyImpl implements JahSpotify
     private native int nativeInitialize(String cacheFolder);
     private native int nativeDestroy();
 	private native int nativeLogin(String username, String password, String blob, boolean savePassword);
+	private native void nativeLogout();
+	private native void nativeForgetMe();
 
     private native boolean registerNativeMediaLoadedListener(final NativeMediaLoadedListener nativeMediaLoadedListener);
 
