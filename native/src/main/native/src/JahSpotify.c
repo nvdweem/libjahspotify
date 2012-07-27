@@ -1213,8 +1213,8 @@ jobject createJArtistInstance(JNIEnv *env, sp_artist *artist, int browse)
 
         setObjectStringField(env,artistInstance,"name",sp_artist_name(artist));
 
-		if (browse)
-			sp_artistbrowse_create(g_sess,artist,SP_ARTISTBROWSE_NO_TRACKS,artistBrowseCompleteCallback, (*env)->NewGlobalRef(env, artistInstance));
+		if (browse > 0)
+			sp_artistbrowse_create(g_sess,artist,browse == 1 ? SP_ARTISTBROWSE_NO_TRACKS : SP_ARTISTBROWSE_NO_ALBUMS,artistBrowseCompleteCallback, (*env)->NewGlobalRef(env, artistInstance));
     }
 
     sp_artist_release(artist);
@@ -1296,7 +1296,7 @@ jobject createJPlaylist(JNIEnv *env, sp_playlist *playlist)
 
 }
 
-JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveArtist ( JNIEnv *env, jobject obj, jstring uri, jboolean browse)
+JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveArtist ( JNIEnv *env, jobject obj, jstring uri, jint browse)
 {
     jobject artistInstance;
     uint8_t *nativeUri = NULL;
@@ -1311,7 +1311,7 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveArtist ( J
       if (artist)
       {
   sp_artist_add_ref(artist);
-  artistInstance = createJArtistInstance(env, artist, browse ? 1 : 0);
+  artistInstance = createJArtistInstance(env, artist, browse);
   sp_artist_release(artist);
       }
       sp_link_release(link);

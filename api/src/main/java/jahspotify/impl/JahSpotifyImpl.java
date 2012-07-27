@@ -17,6 +17,8 @@ import jahspotify.media.PlaylistContainer;
 import jahspotify.media.TopListType;
 import jahspotify.media.Track;
 import jahspotify.media.User;
+import jahspotify.services.JahSpotifyService;
+import jahspotify.services.MediaHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -346,6 +348,15 @@ public class JahSpotifyImpl implements JahSpotify
     @Override
     public Artist readArtist(final Link uri, boolean browse)
     {
+    	return readArtist(uri, browse ? 1 : 0);
+    }
+    /**
+     * Reads the artist
+     * @param uri The uri of the artist
+     * @param browse 0 for no, 1 for yes, 2 for yes, but don't browse for tracks and albums.
+     * @return
+     */
+    private Artist readArtist(final Link uri, int browse) {
         ensureLoggedIn();
 
         _libSpotifyLock.lock();
@@ -358,7 +369,6 @@ public class JahSpotifyImpl implements JahSpotify
             _libSpotifyLock.unlock();
         }
     }
-
 
     @Override
     public Track readTrack(Link uri)
@@ -380,6 +390,9 @@ public class JahSpotifyImpl implements JahSpotify
     {
         ensureLoggedIn();
 
+        uri = getCorrectImageLink(uri);
+        if (uri == null) return null;
+
         _libSpotifyLock.lock();
         Image image = new Image(uri);
         try
@@ -392,6 +405,31 @@ public class JahSpotifyImpl implements JahSpotify
         }
 
         return image;
+    }
+    /**
+     * Returns the link for the image of the given linktype.
+     * @param link
+     * @return
+     */
+    private Link getCorrectImageLink(Link link) {
+    	switch (link.getType()) {
+	    	case ALBUM:
+				Album album = readAlbum(link);
+				return album.getCover();
+			case ARTIST:
+				Artist artist = readArtist(link, 2);
+				if (!MediaHelper.waitFor(artist, 2)) break;
+				List<Link> links = artist.getPortraits();
+				if (links.size() > 0) return links.get(0);
+				return null;
+			case TRACK:
+				Track t = readTrack(link);
+				return JahSpotifyService.getInstance().getJahSpotify().readAlbum(t.getAlbum()).getCover();
+			case IMAGE:
+				return link;
+			default: throw new RuntimeException("Unable to get an image from a " + link.getType() + " link ("+link+").");
+    	}
+    	return null;
     }
 
     @Override
@@ -634,7 +672,7 @@ public class JahSpotifyImpl implements JahSpotify
 
     private native Album retrieveAlbum(String uri, boolean browse);
 
-    private native Artist retrieveArtist(String uri, boolean browse);
+    private native Artist retrieveArtist(String uri, int browse);
 
     private native Track retrieveTrack(String uri);
 
