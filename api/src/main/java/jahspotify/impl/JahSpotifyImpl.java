@@ -485,8 +485,14 @@ public class JahSpotifyImpl implements JahSpotify
 
 		// Make usable image from the Spotify image types.
 		List<BufferedImage> bImages = new ArrayList<BufferedImage>();
-		for (Image image : images)
-			bImages.add(ImageIO.read(new ByteArrayInputStream(image.getBytes())));
+		Image correct = null;
+		for (Image image : images) {
+			if (image.getBytes() != null) {
+				correct = image;
+				bImages.add(ImageIO.read(new ByteArrayInputStream(image.getBytes())));
+			}
+		}
+		if (bImages.size() != 4) return correct;
 
 		// Draw the target image.
 		BufferedImage target = new BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
