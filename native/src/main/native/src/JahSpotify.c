@@ -1526,7 +1526,9 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_readImage (JNIEnv *en
             sp_image_add_load_callback(image, imageLoadedCallback, (*env)->NewGlobalRef(env, imageInstance));
         }
         sp_link_release(imageLink);
-    }
+    } else {
+		log_error("jahspotify","readImage","Image link is null");
+	}
 
 	if (nativeURI) (*env)->ReleaseStringUTFChars(env, uri, (char *)nativeURI);
 }
