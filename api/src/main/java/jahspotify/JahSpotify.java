@@ -5,7 +5,6 @@ import jahspotify.media.Artist;
 import jahspotify.media.Image;
 import jahspotify.media.Link;
 import jahspotify.media.Playlist;
-import jahspotify.media.PlaylistContainer;
 import jahspotify.media.TopListType;
 import jahspotify.media.Track;
 import jahspotify.media.User;
@@ -92,12 +91,6 @@ public interface JahSpotify
      * @return SearchResult with the correct list filled.
      */
     public SearchResult getTopList(TopListType type);
-
-    /**
-     * Retrieves the playlistcontainer with all playlists for the current user.
-     * @return
-     */
-    public PlaylistContainer getPlaylistContainer();
 
     /** Pauses the currently playing track.  Does nothing if nothing is currently playing
      *

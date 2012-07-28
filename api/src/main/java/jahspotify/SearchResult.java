@@ -2,6 +2,7 @@ package jahspotify;
 
 import jahspotify.media.Link;
 import jahspotify.media.Loadable;
+import jahspotify.media.Playlist;
 
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class SearchResult implements Loadable
    private List<Link> artistsFound;
    private int totalNumArtists;
    private int artistOffset;
+   private List<Playlist> playlistsFound;
+   private int totalNumPlaylists;
+   private int playlistOffset;
 
     public String getDidYouMean()
     {
@@ -79,7 +83,19 @@ public class SearchResult implements Loadable
         return tracksFound;
     }
 
-    @Override
+    public List<Playlist> getPlaylistsFound() {
+		return playlistsFound;
+	}
+
+	public int getTotalNumPlaylists() {
+		return totalNumPlaylists;
+	}
+
+	public int getPlaylistOffset() {
+		return playlistOffset;
+	}
+
+	@Override
     public String toString()
     {
         return "SearchResult{" +

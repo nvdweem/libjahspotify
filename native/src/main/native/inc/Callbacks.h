@@ -25,7 +25,7 @@ int signalPlaylistSeen(const char *playlistName, char *linkName);
 int signalSearchComplete(sp_search *search, int32_t token);
 int signalImageLoaded(sp_image *image, jobject imageInstance);
 int signalTrackLoaded(sp_track *track, int32_t token);
-int signalPlaylistLoaded(sp_playlist *track, int32_t token);
+int signalPlaylistLoaded(jobject playlist);
 int signalAlbumBrowseLoaded(sp_albumbrowse *albumBrowse, jobject token);
 int signalArtistBrowseLoaded(sp_artistbrowse *artistBrowse, jobject token);
 

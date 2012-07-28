@@ -13,20 +13,28 @@ import jahspotify.media.Image;
 import jahspotify.media.ImageSize;
 import jahspotify.media.Link;
 import jahspotify.media.Playlist;
-import jahspotify.media.PlaylistContainer;
 import jahspotify.media.TopListType;
 import jahspotify.media.Track;
 import jahspotify.media.User;
 import jahspotify.services.JahSpotifyService;
 import jahspotify.services.MediaHelper;
 
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,8 +66,6 @@ public class JahSpotifyImpl implements JahSpotify
     private User _user;
     private AtomicInteger _globalToken = new AtomicInteger(1);
 
-    private final PlaylistContainer playlistContainer = new PlaylistContainer();
-
     protected JahSpotifyImpl()
     {
         registerNativeMediaLoadedListener(new NativeMediaLoadedListener()
@@ -71,9 +77,9 @@ public class JahSpotifyImpl implements JahSpotify
             }
 
             @Override
-            public void playlist(final int token, final Link link, final String name)
+            public void playlist(final Playlist playlist)
             {
-            	playlistContainer.addPlaylist(link, name);
+            	_log.trace(String.format("Playlist loaded: link=%s", playlist.getId()));
             }
 
             @Override
@@ -166,7 +172,7 @@ public class JahSpotifyImpl implements JahSpotify
             @Override
             public void searchCompleted(final int token, final SearchResult searchResult)
             {
-                _log.debug(String.format("Search completed: token=%d searchResult=%s", token, searchResult));
+                _log.debug(String.format("Search completed: token=%d", token));
 
                 if (token > 0)
                 {
@@ -254,11 +260,6 @@ public class JahSpotifyImpl implements JahSpotify
 	public void destroy() {
     	_jahSpotifyThread = null;
     	nativeDestroy();
-	}
-
-    @Override
-	public PlaylistContainer getPlaylistContainer() {
-		return playlistContainer;
 	}
 
     protected void albumLoadedCallback(final int token, final Album album)
@@ -390,6 +391,14 @@ public class JahSpotifyImpl implements JahSpotify
     {
         ensureLoggedIn();
 
+        if (uri.isPlaylistLink()) {
+			try {
+				return createPlaylistImage(uri);
+			} catch (IOException e) {
+				_log.warn("Unable to create playlist image.");
+			}
+        }
+
         uri = getCorrectImageLink(uri);
         if (uri == null) return null;
 
@@ -437,6 +446,66 @@ public class JahSpotifyImpl implements JahSpotify
     	}
     	return null;
     }
+
+    /**
+     * Gets the playlist image if available. If not this method will try to create a
+     * 2x2 image of the albums of the first 4 tracks in the playlist.
+     * If there are less than 4 different albums, only the first album will be used.
+     * @param link
+     * @return
+     * @throws IOException
+     */
+    private Image createPlaylistImage(Link link) throws IOException {
+		if (!link.isPlaylistLink()) throw new IllegalArgumentException("Link should be of type playlist");
+		Playlist playlist = readPlaylist(link, 0, 0);
+		MediaHelper.waitFor(playlist, 1);
+
+		// If the playlist has a custom image, use that.
+		if (playlist.getPicture() != null)
+			return readImage(playlist.getPicture());
+
+		// Get the first 4 different images.
+		Set<Link> albums = new TreeSet<Link>();
+		for (int i = 0; i < playlist.getTracks().size(); i++) {
+			Track track = readTrack(playlist.getTracks().get(i));
+			if (albums.contains(track.getAlbum())) continue;
+			albums.add(track.getAlbum());
+			if (albums.size() == 4) break;
+		}
+
+		if (albums.size() == 0) return null; // Empty playlist, no image.
+		if (albums.size() < 4) return readImage(albums.iterator().next()); // Too few images, just get the first one.
+
+		// Create an image with the 4 images combined.
+		List<Image> images = new ArrayList<Image>();
+		for (Link iLink : albums) {
+			images.add(readImage(iLink));
+		}
+		MediaHelper.waitFor(images, 2);
+
+		// Make usable image from the Spotify image types.
+		List<BufferedImage> bImages = new ArrayList<BufferedImage>();
+		for (Image image : images)
+			bImages.add(ImageIO.read(new ByteArrayInputStream(image.getBytes())));
+
+		// Draw the target image.
+		BufferedImage target = new BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
+		Graphics g = target.getGraphics();
+		BufferedImage image;
+		image = bImages.remove(0); g.drawImage(image,   0,   0, 150, 150, 0, 0, image.getWidth(), image.getHeight(), null);
+		image = bImages.remove(0); g.drawImage(image, 150,   0, 300, 150, 0, 0, image.getWidth(), image.getHeight(), null);
+		image = bImages.remove(0); g.drawImage(image,   0, 150, 150, 300, 0, 0, image.getWidth(), image.getHeight(), null);
+		image = bImages.remove(0); g.drawImage(image, 150, 150, 300, 300, 0, 0, image.getWidth(), image.getHeight(), null);
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ImageIO.write(target, "JPG", baos);
+
+		Image result = new Image();
+		result.setBytes(baos.toByteArray());
+		result.setLoaded(true);
+
+		return result;
+	}
 
     @Override
     public Playlist readPlaylist(Link uri, final int index, final int numEntries)
@@ -642,9 +711,11 @@ public class JahSpotifyImpl implements JahSpotify
         nativeSearchParameters.albumOffset = search.getAlbumOffset();
         nativeSearchParameters.artistOffset = search.getArtistOffset();
         nativeSearchParameters.trackOffset = search.getTrackOffset();
+        nativeSearchParameters.playlistOffset = search.getPlaylistOffset();
         nativeSearchParameters.numAlbums = search.getNumAlbums();
         nativeSearchParameters.numArtists = search.getNumArtists();
         nativeSearchParameters.numTracks = search.getNumTracks();
+        nativeSearchParameters.numPlaylists = search.getNumPlaylists();
         nativeSearchParameters.suggest = search.isSuggest();
         return nativeSearchParameters;
     }
@@ -662,6 +733,9 @@ public class JahSpotifyImpl implements JahSpotify
 
         int artistOffset = 0;
         int numArtists = 255;
+
+        int playlistOffset = 0;
+        int numPlaylists = 255;
     }
 
     private native int nativeInitialize(String cacheFolder);

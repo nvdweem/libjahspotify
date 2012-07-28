@@ -11,7 +11,7 @@ import java.util.List;
  * @author Felix Bruns <felixbruns@web.de>
  * @author Johan Lindquist
  */
-public class Playlist
+public class Playlist implements Loadable
 {
     private Link id;
     private String name;
@@ -24,6 +24,7 @@ public class Playlist
     private List<Link> tracks;
     private int numTracks;
     private int index;
+    private boolean loaded;
 
     public Playlist()
     {
@@ -34,6 +35,20 @@ public class Playlist
         this.collaborative = false;
         this.description = null;
         this.picture = null;
+    }
+
+    /**
+     * Creates a {@link Playlist}
+     *
+     * @return A {@link Playlist} object.
+     */
+    public static Playlist create(Link id, String name, Link picture)
+    {
+        Playlist result = new Playlist();
+        result.id = id;
+        result.name = name;
+        result.picture = picture;
+        return result;
     }
 
     public Link getId()
@@ -61,6 +76,10 @@ public class Playlist
         return this.author;
     }
 
+    public void clear() {
+    	if (tracks != null)
+    		tracks.clear();
+    }
     public void addTrack(Link track)
     {
     	if (track.getType() == Type.LOCAL)
@@ -229,4 +248,14 @@ public class Playlist
                 ", numTracks=" + numTracks +
                 "} " + super.toString();
     }
+
+	@Override
+	public void setLoaded(boolean loaded) {
+		this.loaded = loaded;
+	}
+
+	@Override
+	public boolean isLoaded() {
+		return loaded;
+	}
 }

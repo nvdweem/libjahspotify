@@ -14,6 +14,9 @@ public class Search
 	private int artistOffset = 0;
 	private int numArtists = 255;
 
+	private int playlistOffset = 0;
+	private int numPlaylists = 255;
+
 	private Query _query;
 	private boolean suggest;
 
@@ -92,7 +95,23 @@ public class Search
         this.trackOffset = trackOffset;
     }
 
-    @Override
+    public int getPlaylistOffset() {
+		return playlistOffset;
+	}
+
+	public void setPlaylistOffset(int playlistOffset) {
+		this.playlistOffset = playlistOffset;
+	}
+
+	public int getNumPlaylists() {
+		return numPlaylists;
+	}
+
+	public void setNumPlaylists(int numPlaylists) {
+		this.numPlaylists = numPlaylists;
+	}
+
+	@Override
     public boolean equals(final Object o)
     {
         if (this == o)
@@ -130,6 +149,15 @@ public class Search
         {
             return false;
         }
+        if (numPlaylists != search.numPlaylists)
+        {
+            return false;
+        }
+        if (playlistOffset != search.playlistOffset)
+        {
+            return false;
+        }
+
         if (_query != null ? !_query.equals(search._query) : search._query != null)
         {
             return false;
@@ -155,6 +183,8 @@ public class Search
         result = 31 * result + numAlbums;
         result = 31 * result + artistOffset;
         result = 31 * result + numArtists;
+        result = 31 * result + playlistOffset;
+        result = 31 * result + numPlaylists;
         result = 31 * result + (_query != null ? _query.hashCode() : 0);
         result = 31 * result + (suggest ? 1 : 0);
         return result;

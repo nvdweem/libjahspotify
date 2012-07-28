@@ -13,6 +13,7 @@ jclass g_connectionListenerClass;
 jclass g_searchCompleteListenerClass;
 jclass g_mediaLoadedListenerClass;
 jclass g_linkClass;
+jclass g_playlistCLass;
 jclass g_nativeSearchResultClass;
 jclass g_loggerClass;
 
@@ -466,6 +467,15 @@ jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
         goto error;
     }
     g_linkClass = (*env)->NewGlobalRef(env,aClass);
+
+	aClass = (*env)->FindClass(env, "jahspotify/media/Playlist");
+    if (aClass == NULL)
+    {
+        log_error("jahspotify","JNI_OnLoad","Could not load jahspotify.media.Playlist");
+        goto error;
+    }
+    g_playlistCLass = (*env)->NewGlobalRef(env,aClass);
+
 
     /* success -- return valid version number */
     result = JNI_VERSION_1_4;

@@ -2,36 +2,34 @@ package jahspotify.media;
 
 import jahspotify.impl.JahSpotifyImpl;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlaylistContainer {
 
-	private Map<Link, String> playlists = new TreeMap<Link, String>();
+	private static List<Playlist> playlists = new ArrayList<Playlist>();
 
-	public void addPlaylist(Link link, String name) {
+	public static void addPlaylist(Playlist playlist) {
 		synchronized (playlists) {
-			if (playlists.containsKey(link)) return;
-			playlists.put(link, name);
+			playlists.add(playlist);
 		}
 	}
 
-	public Playlist getPlaylist(int index) {
-		synchronized (playlists) {
-			int i = 0;
-			for (Entry<Link, String> e : playlists.entrySet())
-				if (i++ == index)
-					return getPlaylist(e.getKey());
-		}
+	public static void clear() {
+		playlists.clear();
+	}
+
+	public static Playlist getPlaylist(int index) {
+		if (index >= 0 && index < playlists.size())
+			return playlists.get(index);
 		return null;
 	}
 
-	public Playlist getPlaylist(Link playlist) {
+	public static Playlist getPlaylist(Link playlist) {
 		return JahSpotifyImpl.getInstance().readPlaylist(playlist, 0, 0);
 	}
 
-	public Map<Link, String> getPlaylists() {
-		return new TreeMap<Link, String>(playlists);
+	public static List<Playlist> getPlaylists() {
+		return new ArrayList<Playlist>(playlists);
 	}
 }

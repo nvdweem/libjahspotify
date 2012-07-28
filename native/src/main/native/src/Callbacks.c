@@ -14,9 +14,9 @@
 extern void populateJAlbumInstanceFromAlbumBrowse(JNIEnv *env, sp_album *album, sp_albumbrowse *albumBrowse, jobject albumInstance);
 extern void populateJArtistInstanceFromArtistBrowse(JNIEnv *env, sp_artistbrowse *artistBrowse, jobject artist);
 extern jobject createJLinkInstance(JNIEnv *env, sp_link *link);
+extern jobject createJPlaylistInstance(JNIEnv *env, sp_link* link, const char* name, sp_link* image);
 extern jobject createJAlbumInstance(JNIEnv *env, sp_album *album);
 extern jobject createJTrackInstance(JNIEnv *env, sp_track *track);
-extern jobject createJPlaylistInstance(JNIEnv *env, sp_playlist *playlist);
 
 extern sp_session *g_sess;
 extern sp_track *g_currenttrack;
@@ -571,7 +571,7 @@ int signalImageLoaded(sp_image *image, jobject imageInstance)
     
 }
 
-int signalPlaylistLoaded(sp_playlist *playlist, int32_t token)
+int signalPlaylistLoaded(jobject playlist)
 {
     if (!g_mediaLoadedListener)
     {
@@ -579,50 +579,24 @@ int signalPlaylistLoaded(sp_playlist *playlist, int32_t token)
         return 1;
     }
 
-  sp_playlist_add_ref(playlist);
-
   JNIEnv* env = NULL;
   jmethodID method;
     
-  log_debug("jahspotify","signalPlaylistLoaded","Playlist loaded: token: %d",token);
+  log_debug("jahspotify","signalPlaylistLoaded","Playlist loaded");
   
   if (!retrieveEnv((JNIEnv*)&env))
   {
       goto fail;
   }
   
-  method = (*env)->GetMethodID(env, g_mediaLoadedListenerClass, "playlist", "(ILjahspotify/media/Link;Ljava/lang/String;)V");
-  
+  method = (*env)->GetMethodID(env, g_mediaLoadedListenerClass, "playlist", "(Ljahspotify/media/Playlist;)V");
   if (method == NULL)
   {
       log_error("callbacks","signalPlaylistLoaded","Could not load callback method playlist(Link) on class NativeMediaLoadedListener");
       goto fail;
   }
   
-  sp_link *link = sp_link_create_from_playlist(playlist);
-  
-  sp_link_add_ref(link);
-  
-  jobject jLink = createJLinkInstance(env,link);
-  
-  sp_link_release(link);
-  
-  
-  jstring playlistName;
-  const char* pName = sp_playlist_name(playlist);
-  if (pName)
-      playlistName = (*env)->NewStringUTF(env, pName);
-  
-  (*env)->CallVoidMethod(env,g_mediaLoadedListener,method,token,jLink,playlistName);
-
-  if (playlistName) (*env)->DeleteLocalRef(env, playlistName);
-
-  if (checkException(env) != 0)
-  {
-      log_error("callbacks","signalPlaylistLoaded","exception while calling listener");
-      goto fail;
-  }
-  
+  (*env)->CallVoidMethod(env,g_mediaLoadedListener,method,playlist);
   log_debug("callbacks","signalPlaylistLoaded","Callback invokved");
   
   goto exit;
@@ -630,8 +604,6 @@ int signalPlaylistLoaded(sp_playlist *playlist, int32_t token)
   fail:
   
   exit:
-  
-  sp_playlist_release(playlist);
   detachThread();  
 }
 
@@ -922,6 +894,7 @@ int signalSearchComplete(sp_search *search, int32_t token)
   jobject trackLinkCollection;
   jobject albumLinkCollection;
   jobject artistLinkCollection;
+  jobject playlistLinkCollection;
   int numResultsFound = 0;
   int index = 0;
   
@@ -1035,6 +1008,23 @@ int signalSearchComplete(sp_search *search, int32_t token)
   }
   if (artistLinkCollection) (*env)->DeleteLocalRef(env, artistLinkCollection);
 
+  playlistLinkCollection = createInstance(env,"java/util/ArrayList");
+  setObjectObjectField(env,nativeSearchResult,"playlistsFound","Ljava/util/List;",playlistLinkCollection);
+
+  numResultsFound = sp_search_num_playlists(search);
+  for (index = 0; index < numResultsFound; index++)
+  {
+	  sp_link *link = sp_link_create_from_string(sp_search_playlist_uri(search, index));
+	  sp_link *imageLink = sp_link_create_from_string(sp_search_playlist_image_uri(search, index));
+
+	  jLink = createJPlaylistInstance(env, link, sp_search_playlist_name(search, index), imageLink);
+	  addObjectToCollection(env, playlistLinkCollection,jLink);
+
+	  if (link) sp_link_release(link);
+	  if (imageLink) sp_link_release(imageLink);
+  }
+  if (playlistLinkCollection) (*env)->DeleteLocalRef(env, playlistLinkCollection);
+
   setObjectIntField(env,nativeSearchResult,"totalNumTracks",sp_search_total_tracks(search));
   setObjectIntField(env,nativeSearchResult,"trackOffset",sp_search_num_tracks(search));
   
@@ -1043,6 +1033,9 @@ int signalSearchComplete(sp_search *search, int32_t token)
   
   setObjectIntField(env,nativeSearchResult,"totalNumArtists",sp_search_total_artists(search));
   setObjectIntField(env,nativeSearchResult,"artistOffset",sp_search_num_artists(search));
+
+  setObjectIntField(env,nativeSearchResult,"totalNumPlaylists",sp_search_total_playlists(search));
+  setObjectIntField(env,nativeSearchResult,"playlistOffset",sp_search_num_playlists(search));
   
   setObjectStringField(env,nativeSearchResult,"query",sp_search_query(search));
   setObjectStringField(env,nativeSearchResult,"didYouMean",sp_search_did_you_mean(search));
