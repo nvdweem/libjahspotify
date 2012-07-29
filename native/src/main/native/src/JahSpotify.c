@@ -1521,9 +1521,14 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_readImage (JNIEnv *en
         sp_image *image = sp_image_create_from_link(g_sess,imageLink);
         if (image)
         {
+			imageInstance = (*env)->NewGlobalRef(env, imageInstance);
             // Reference is released by the image loaded callback
-            sp_image_add_ref(image);
-            sp_image_add_load_callback(image, imageLoadedCallback, (*env)->NewGlobalRef(env, imageInstance));
+			if (sp_image_is_loaded(image)) {
+				log_debug("jahspotify","readImage","Image already loaded, dont wait for callback.");
+				signalImageLoaded(image, imageInstance);
+			} else {
+	            sp_image_add_load_callback(image, imageLoadedCallback, (*env)->NewGlobalRef(env, imageInstance));
+			}
         }
         sp_link_release(imageLink);
     } else {
