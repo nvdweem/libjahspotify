@@ -91,6 +91,13 @@ public interface JahSpotify
      * @return SearchResult with the correct list filled.
      */
     public SearchResult getTopList(TopListType type);
+    /**
+     * Retrieves a toplist.
+     * @param type Type of playlist
+     * @param country Country code, null for global, "SE" for sweden, "NL" for netherlands etc.
+     * @return SearchResult with the correct list filled.
+     */
+    public SearchResult getTopList(TopListType type, String country);
 
     /** Pauses the currently playing track.  Does nothing if nothing is currently playing
      *

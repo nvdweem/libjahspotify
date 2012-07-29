@@ -1476,9 +1476,9 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrievePlaylist (
 static void SP_CALLCONV toplistCallback(sp_toplistbrowse *result, void *userdata) {
 	signalToplistComplete(result, (jobject) userdata);
 }
-JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTopList(JNIEnv *env, jobject obj, jint type) {
+JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTopList(JNIEnv *env, jobject obj, jint type, jint countrycode) {
 	jobject searchResult = createSearchResult(env);
-	sp_toplistbrowse_create(g_sess, (int) type, SP_TOPLIST_REGION_EVERYWHERE, NULL, toplistCallback, searchResult);
+	sp_toplistbrowse_create(g_sess, (int) type, countrycode == -1 ? SP_TOPLIST_REGION_EVERYWHERE : countrycode, NULL, toplistCallback, searchResult);
     return searchResult;
 }
 

@@ -535,10 +535,18 @@ public class JahSpotifyImpl implements JahSpotify
 
     @Override
 	public SearchResult getTopList(TopListType type) {
+    	return getTopList(type, null);
+    }
+    @Override
+	public SearchResult getTopList(TopListType type, String country) {
+    	int countrycode = -1;
+    	if (country != null && country.length() == 2) {
+    		countrycode = country.charAt(0) << 8 | country.charAt(1);
+    	}
     	ensureLoggedIn();
     	_libSpotifyLock.lock();
     	try {
-    		return retrieveTopList(type.ordinal());
+    		return retrieveTopList(type.ordinal(), countrycode);
     	} finally {
     		_libSpotifyLock.unlock();
     	}
@@ -763,7 +771,7 @@ public class JahSpotifyImpl implements JahSpotify
     private native Track retrieveTrack(String uri);
 
     private native Playlist retrievePlaylist(String uri);
-    private native SearchResult retrieveTopList(int type);
+    private native SearchResult retrieveTopList(int type, int countrycode);
 
     private native int nativePlayTrack(String uri);
     private native void nativeStopTrack();
