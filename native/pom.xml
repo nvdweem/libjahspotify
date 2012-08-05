@@ -61,7 +61,7 @@
                 <compilerparams>"-I${java.home}\..\include"
                     "-I${java.home}\..\include\win32" "-I${spotify}\include"
                 </compilerparams>
-                <linkeropts>"${spotify}lib\libspotify.lib"</linkeropts>
+                <linkeropts>"${spotify}\lib\libspotify.lib"</linkeropts>
                 <lstartopts>-D_JNI_IMPLEMENTATION_ -Wl,--kill-at</lstartopts>
                 <artifact>jahspotify</artifact>
                 <packaging>dll</packaging>
