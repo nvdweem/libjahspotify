@@ -12,6 +12,7 @@ jint setObjectIntField(JNIEnv * env, jobject obj, const char *name, jint value);
 jint setObjectLongField(JNIEnv * env, jobject obj, const char *name, jlong value);
 jint setObjectStringField(JNIEnv * env, jobject obj, const char *name, const char *value);
 jint setObjectObjectField(JNIEnv * env, jobject obj, const char *name, char *fieldTypeName, jobject value);
+jint setObjectBooleanField(JNIEnv * env, jobject obj, const char *name, jboolean value);
 
 jint getObjectLongField(JNIEnv * env, jobject obj, const char *name, jlong *value);
 jstring getObjectStringField(JNIEnv * env, jobject obj, const char *name);

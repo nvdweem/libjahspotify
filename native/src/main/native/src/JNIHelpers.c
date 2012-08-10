@@ -231,10 +231,7 @@ jstring getObjectStringField(JNIEnv * env, jobject obj, const char *name) {
 
 jint setObjectObjectField(JNIEnv * env, jobject obj, const char *name, char *fieldClassName, jobject value) {
 	jclass clazz;
-//     , fieldClazz;
 	jfieldID field;
-	jstring str;
-
 	clazz = (*env)->GetObjectClass(env, obj);
 	if (clazz == NULL ) return 1;
 

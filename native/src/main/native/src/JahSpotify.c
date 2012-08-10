@@ -243,8 +243,6 @@ static void SP_CALLCONV logged_in(sp_session *sess, sp_error error) {
 	}
 
 	sp_playlistcontainer *pc = sp_session_playlistcontainer(sess);
-	int i;
-
 	sp_playlistcontainer_add_callbacks(sp_session_playlistcontainer(g_sess), &pc_callbacks, NULL );
 
 	log_debug("jahspotify", "logged_in", "Login Success: %d", sp_playlistcontainer_num_playlists(pc));
@@ -440,7 +438,7 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitiateSearch(
 	}
 
 	sp_search_type type = suggest ? SP_SEARCH_SUGGEST : SP_SEARCH_STANDARD;
-	sp_search *search = sp_search_create(g_sess, nativeQuery, trackOffset, numTracks, albumOffset, numAlbums, artistOffset, numArtists, playlistOffset,
+	sp_search_create(g_sess, nativeQuery, trackOffset, numTracks, albumOffset, numAlbums, artistOffset, numArtists, playlistOffset,
 			numPlaylists, type, searchCompleteCallback, token);
 }
 
@@ -541,7 +539,7 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveUser(JNIEn
 
 char* createLinkStr(sp_link *link) {
 	char *linkStr = calloc(1, sizeof(char) * (100));
-	int len = sp_link_as_string(link, linkStr, 100);
+	sp_link_as_string(link, linkStr, 100);
 	return linkStr;
 }
 
@@ -551,8 +549,7 @@ jobject createJLinkInstance(JNIEnv *env, sp_link *link) {
 	jmethodID jMethod = NULL;
 
 	char *linkStr = malloc(sizeof(char) * (100));
-
-	int len = sp_link_as_string(link, linkStr, 100);
+	sp_link_as_string(link, linkStr, 100);
 
 	jstring jString = (*env)->NewStringUTF(env, linkStr);
 
@@ -1146,9 +1143,9 @@ jobject createJPlaylist(JNIEnv *env, jobject playlistInstance, sp_playlist *play
 
 JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveArtist(JNIEnv *env, jobject obj, jstring uri, jint browse) {
 	jobject artistInstance;
-	uint8_t *nativeUri = NULL;
+	const char *nativeUri = NULL;
 
-	nativeUri = (uint8_t *) (*env)->GetStringUTFChars(env, uri, NULL );
+	nativeUri = (*env)->GetStringUTFChars(env, uri, NULL );
 
 	sp_link *link = sp_link_create_from_string(nativeUri);
 	if (link) {
@@ -1169,9 +1166,9 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveArtist(JNI
 
 JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveAlbum(JNIEnv *env, jobject obj, jstring uri, jboolean browse) {
 	jobject albumInstance;
-	uint8_t *nativeUri = NULL;
+	const char *nativeUri = NULL;
 
-	nativeUri = (uint8_t *) (*env)->GetStringUTFChars(env, uri, NULL );
+	nativeUri = (*env)->GetStringUTFChars(env, uri, NULL );
 
 	sp_link *link = sp_link_create_from_string(nativeUri);
 	if (link) {
@@ -1199,9 +1196,9 @@ JNIEXPORT jboolean JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeShutdown(JN
 
 JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTrack(JNIEnv *env, jobject obj, jstring uri) {
 	jobject trackInstance;
-	uint8_t *nativeUri = NULL;
+	const char *nativeUri = NULL;
 
-	nativeUri = (uint8_t *) (*env)->GetStringUTFChars(env, uri, NULL );
+	nativeUri = (*env)->GetStringUTFChars(env, uri, NULL );
 
 	sp_link *link = sp_link_create_from_string(nativeUri);
 	if (!link) {
@@ -1235,11 +1232,11 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTrack(JNIE
 JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrievePlaylist(JNIEnv *env, jobject obj, jstring uri) {
 	jobject playlistInstance;
 	sp_playlist *playlist;
-	uint8_t *nativeUri = NULL;
+	const char *nativeUri = NULL;
 	sp_link *link = NULL;
 
 	if (uri) {
-		nativeUri = (uint8_t *) (*env)->GetStringUTFChars(env, uri, NULL );
+		nativeUri = (*env)->GetStringUTFChars(env, uri, NULL );
 
 		log_debug("jahspotify", "retrievePlaylist", "Retrieving playlist: %s", nativeUri);
 
@@ -1296,11 +1293,8 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeResume(JNIEnv *
 }
 
 JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_readImage(JNIEnv *env, jobject obj, jstring uri, jobject imageInstance) {
-	uint8_t *nativeURI = (uint8_t *) (*env)->GetStringUTFChars(env, uri, NULL );
+	const char *nativeURI = (*env)->GetStringUTFChars(env, uri, NULL );
 	sp_link *imageLink = sp_link_create_from_string(nativeURI);
-	size_t size;
-	jclass jClass;
-
 	log_debug("jahspotify", "readImage", "Loading image: %s", nativeURI);
 
 	if (imageLink) {
@@ -1335,9 +1329,9 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeStopTrack(JNIEn
 }
 
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativePlayTrack(JNIEnv *env, jobject obj, jstring uri) {
-	uint8_t *nativeURI = NULL;
+	const char *nativeURI = NULL;
 
-	nativeURI = (uint8_t *) (*env)->GetStringUTFChars(env, uri, NULL );
+	nativeURI = (*env)->GetStringUTFChars(env, uri, NULL );
 
 	log_debug("jahspotify", "nativePlayTrack", "Initiating play: %s", nativeURI);
 
@@ -1431,7 +1425,7 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativePlayTrack(JNIEn
 	fail: log_error("jahspotify", "nativePlayTrack", "Error starting play");
 
 	exit: if (nativeURI) (*env)->ReleaseStringUTFChars(env, uri, (char *) nativeURI);
-
+	return 0;
 }
 
 /**
@@ -1441,8 +1435,6 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativePlayTrack(JNIEn
  */
 static void track_ended(void) {
 	log_debug("jahspotify", "track_ended", "Called");
-
-	int tracks = 0;
 
 	if (g_currenttrack) {
 		sp_link *link = sp_link_create_from_track(g_currenttrack, 0);
@@ -1533,6 +1525,7 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIE
 			case SP_CONNECTION_STATE_UNDEFINED:
 			case SP_CONNECTION_STATE_LOGGED_OUT:
 			case SP_CONNECTION_STATE_LOGGED_IN:
+			case SP_CONNECTION_STATE_OFFLINE:
 				break;
 			case SP_CONNECTION_STATE_DISCONNECTED:
 				log_warn("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize", "Disconnected!");
@@ -1552,14 +1545,15 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIE
 	sp_session_release(g_sess);
 
 	if (nativeCacheFolder) (*env)->ReleaseStringUTFChars(env, cacheFolder, nativeCacheFolder);
+	return 0;
 }
 
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogin(JNIEnv *env, jobject obj, jstring username, jstring password, jstring blob,
 		jboolean savePassword) {
 	sp_error err;
-	uint8_t *nativePassword = NULL;
-	uint8_t *nativeUsername = NULL;
-	uint8_t *nativeBlob = NULL;
+	const char *nativePassword = NULL;
+	const char *nativeUsername = NULL;
+	const char *nativeBlob = NULL;
 
 	if (!username && (!password || !blob)) {
 		log_error("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize", "Try to login without username and/or password.");
@@ -1570,9 +1564,9 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeLogin(JNIEnv *e
 			return 1;
 		}
 	} else {
-		nativeUsername = (uint8_t *) (*env)->GetStringUTFChars(env, username, NULL );
-		if (password) nativePassword = (uint8_t *) (*env)->GetStringUTFChars(env, password, NULL );
-		if (blob) nativeBlob = (uint8_t *) (*env)->GetStringUTFChars(env, blob, NULL );
+		nativeUsername = (*env)->GetStringUTFChars(env, username, NULL );
+		if (password) nativePassword = (*env)->GetStringUTFChars(env, password, NULL );
+		if (blob) nativeBlob = (*env)->GetStringUTFChars(env, blob, NULL );
 
 		log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize", "Locking");
 		log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize", "Initiating login: %s", nativeUsername);
@@ -1598,4 +1592,5 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeForgetMe(JNIEnv
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeDestroy(JNIEnv *env, jobject obj) {
 	g_stop_after_logout = 1;
 	sp_session_logout(g_sess);
+	return 0;
 }

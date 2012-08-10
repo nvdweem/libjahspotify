@@ -34,7 +34,7 @@ static void logToJava(const char *method, const char *component, const char *sub
 
 	(*env)->CallStaticVoidMethod(env, g_loggerClass, jMethod, componentStr, subComponentStr, messageStr);
 
-	fail: exit: if (buffer) {
+	fail: if (buffer) {
 		free(buffer);
 	}
 

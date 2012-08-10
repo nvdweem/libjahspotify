@@ -18,7 +18,7 @@ int signalMetadataUpdated(sp_playlist *playlist);
 int signalEndFolderSeen();
 
 int signalTrackEnded(char *uri, bool forcedTrackEnd);
-int signalTrackStarted(char *uri);
+int signalTrackStarted(const char *uri);
 void signalPlayTokenLost();
 int signalPlaylistSeen(const char *playlistName, char *linkName);
 

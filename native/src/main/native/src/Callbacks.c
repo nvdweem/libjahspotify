@@ -40,7 +40,7 @@ jint addObjectToCollection(JNIEnv *env, jobject collection, jobject object) {
 	if (methodID == NULL) return 1;
 
 	// Invoke the method
-	jboolean result = (*env)->CallBooleanMethod(env, collection, methodID, object);
+	(*env)->CallBooleanMethod(env, collection, methodID, object);
 	if (checkException(env) != 0) {
 		log_error("callbacks", "addObjectToCollection", "Exception while adding object to collection");
 	}
@@ -49,13 +49,13 @@ jint addObjectToCollection(JNIEnv *env, jobject collection, jobject object) {
 }
 
 void startPlaybackSignalled() {
-	JNIEnv* env = NULL;
-	int result;
-	jclass aClass;
-	jmethodID method;
-	jstring nextUriStr;
-	char *nextUri;
-
+//	JNIEnv* env = NULL;
+//	int result;
+//	jclass aClass;
+//	jmethodID method;
+//	jstring nextUriStr;
+//	char *nextUri;
+//
 //     log_debug("callbacks","startPlaybackSignalled","About to start pre-loading track");
 //     
 //         
@@ -110,8 +110,6 @@ void startPlaybackSignalled() {
 
 int signalConnected() {
 	JNIEnv* env = NULL;
-	int result;
-	jclass aClass;
 	jmethodID method;
 
 	if (!g_connectionListener) {
@@ -148,8 +146,6 @@ int signalDisconnected() {
 
 int signalLoggedOut() {
 	JNIEnv* env = NULL;
-	int result;
-
 	if (!retrieveEnv((JNIEnv*) &env)) {
 		goto fail;
 	}
@@ -164,8 +160,6 @@ int signalLoggedOut() {
 
 int signalLoggedIn(int loggedIn) {
 	JNIEnv* env = NULL;
-	int result;
-	jclass aClass;
 	jmethodID method;
 
 	if (!g_connectionListener) {
@@ -200,7 +194,6 @@ int signalLoggedIn(int loggedIn) {
 
 void signalBlobUpdated(const char* blob) {
 	JNIEnv* env = NULL;
-	jclass aClass;
 	jmethodID method;
 	jstring blobStr = NULL;
 
@@ -245,8 +238,6 @@ int signalTrackEnded(char *uri, bool forcedTrackEnd) {
 	}
 
 	JNIEnv* env = NULL;
-	int result;
-	jclass aClass;
 	jmethodID method;
 	jstring uriStr;
 
@@ -281,14 +272,12 @@ int signalTrackEnded(char *uri, bool forcedTrackEnd) {
 
 	exit: if (uriStr) (*env)->DeleteLocalRef(env, uriStr);
 
-	result = detachThread();
+	detachThread();
 	return 0;
 }
 
-int signalTrackStarted(char *uri) {
+int signalTrackStarted(const char *uri) {
 	JNIEnv* env = NULL;
-	int result;
-	jclass aClass;
 	jmethodID method;
 	jstring uriStr;
 
@@ -326,14 +315,12 @@ int signalTrackStarted(char *uri) {
 
 	exit: if (uriStr) (*env)->DeleteLocalRef(env, uriStr);
 
-	result = detachThread();
+	detachThread();
 	return 0;
 }
 
 void signalPlayTokenLost() {
 	JNIEnv* env = NULL;
-	int result;
-	jclass aClass;
 	jmethodID method;
 
 	if (!g_playbackListener) {
@@ -357,12 +344,11 @@ void signalPlayTokenLost() {
 
 	fail: log_error("callbacks", "signalPlayTokenLost", "Error during callback");
 
-	exit: result = detachThread();
+	exit: detachThread();
 }
 
 int signalArtistBrowseLoaded(sp_artistbrowse *artistBrowse, jobject artistInstance) {
 	JNIEnv* env = NULL;
-	jclass aClass;
 	jmethodID aMethod;
 
 	sp_link *artistLink = NULL;
@@ -533,7 +519,6 @@ int signalPlaylistLoaded(jobject playlist) {
 
 int signalAlbumBrowseLoaded(sp_albumbrowse *albumBrowse, jobject albumInstance) {
 	JNIEnv* env = NULL;
-	jclass aClass;
 	jmethodID aMethod;
 
 	sp_album *album = NULL;
