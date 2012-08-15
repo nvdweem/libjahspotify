@@ -69,8 +69,6 @@ public class MediaPlayer implements PlaybackListener {
 	 * Go to the next track.
 	 */
 	public void endOfTrack() {
-		history.add(0, currentTrack);
-		trimHistory();
 		currentTrack = null;
 		next();
 	}
@@ -85,6 +83,8 @@ public class MediaPlayer implements PlaybackListener {
 		if (track == null) return false;
 
 		currentTrack = track;
+		history.add(0, currentTrack);
+		trimHistory();
 		playNow(track);
 		return true;
 	}
@@ -334,4 +334,8 @@ public class MediaPlayer implements PlaybackListener {
 		}
 	}
 
+	public List<Track> getHistory() {
+		return history;
+	}
+	
 }
