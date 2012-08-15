@@ -603,6 +603,7 @@ public class JahSpotifyImpl implements JahSpotify
 
     @Override
 	public boolean isLoggedIn() {
+    	if (_loggedIn) _loggingIn = false;
 		return _loggedIn;
 	}
 
