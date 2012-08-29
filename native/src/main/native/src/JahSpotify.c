@@ -1483,6 +1483,7 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIE
 	g_stop = 0;
 	for (;;) {
 		if (next_timeout == 0) {
+			signalInitialized(1);
 			while (!g_notify_do && !g_playback_done)
 				pthread_cond_wait(&g_notify_cond, &g_notify_mutex);
 		} else {
@@ -1538,6 +1539,7 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIE
 	sp_session_release(g_sess);
 
 	if (nativeCacheFolder) (*env)->ReleaseStringUTFChars(env, cacheFolder, nativeCacheFolder);
+	signalInitialized(0);
 	return 0;
 }
 

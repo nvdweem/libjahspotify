@@ -5,6 +5,7 @@ package jahspotify.impl;
  */
 public interface NativeConnectionListener
 {
+	public void initialized(boolean initialized);
     public void connected();
     public void disconnected();
     public void loggedIn(boolean success);

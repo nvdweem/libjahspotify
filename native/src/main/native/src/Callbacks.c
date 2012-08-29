@@ -140,6 +140,38 @@ int signalConnected() {
 	return 0;
 }
 
+int signalInitialized(int initialized) {
+	JNIEnv* env = NULL;
+	jmethodID method;
+
+	if (!g_connectionListener) {
+		log_error("jahspotify", "signalInitialized", "No connection listener registered");
+		return 1;
+	}
+
+	if (!retrieveEnv((JNIEnv*) &env)) {
+		goto fail;
+	}
+
+	method = (*env)->GetMethodID(env, g_connectionListenerClass, "initialized", "(Z)V");
+
+	if (method == NULL) {
+		log_error("callbacks", "signalInitialized", "Could not load callback method initialized() on class ConnectionListener");
+		goto fail;
+	}
+
+	(*env)->CallVoidMethod(env, g_connectionListener, method, initialized == 1 ? JNI_TRUE : JNI_FALSE);
+	checkException(env);
+
+	goto exit;
+
+	fail: log_error("callbacks", "signalInitialized", "Error during callback");
+
+	exit: detachThread();
+
+	return 0;
+}
+
 int signalDisconnected() {
 	return 0;
 }

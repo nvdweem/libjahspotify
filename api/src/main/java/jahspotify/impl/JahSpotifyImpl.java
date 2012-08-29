@@ -195,9 +195,11 @@ public class JahSpotifyImpl implements JahSpotify
             public void connected()
             {
                 _connected = true;
-                for (ConnectionListener listener : _connectionListeners)
+                for (final ConnectionListener listener : _connectionListeners)
                 {
-                    listener.connected();
+                	new Thread() {
+                		public void run() {listener.connected();}
+                	}.start();
                 }
             }
 
@@ -217,9 +219,11 @@ public class JahSpotifyImpl implements JahSpotify
                 _connected = success;
                 _loggingIn = false;
                 if (!success) return;
-                for (ConnectionListener listener : _connectionListeners)
+                for (final ConnectionListener listener : _connectionListeners)
                 {
-                    listener.loggedIn();
+                	new Thread() {
+                		public void run() {listener.loggedIn();}
+                	}.start();
                 }
             }
 
@@ -231,9 +235,24 @@ public class JahSpotifyImpl implements JahSpotify
             }
 
 			@Override
-			public void blobUpdated(String blob) {
-				for (ConnectionListener listener : _connectionListeners)
-                    listener.blobUpdated(blob);
+			public void blobUpdated(final String blob) {
+				for (final ConnectionListener listener : _connectionListeners)
+                {
+                	new Thread() {
+                		public void run() {listener.blobUpdated(blob);}
+                	}.start();
+                }
+			}
+
+			@Override
+			public void initialized(final boolean initialized) {
+				JahSpotifyImpl.this.initialized = initialized;
+				for (final ConnectionListener listener : _connectionListeners)
+                {
+                	new Thread() {
+                		public void run() {listener.initialized(initialized);}
+                	}.start();
+                }
 			}
         });
     }
@@ -248,9 +267,7 @@ public class JahSpotifyImpl implements JahSpotify
             @Override
             public void run()
             {
-            	initialized = true;
             	nativeInitialize(cacheFolder);
-            	initialized = false;
             }
         };
         _jahSpotifyThread.start();
@@ -701,6 +718,8 @@ public class JahSpotifyImpl implements JahSpotify
     @Override
     public void addConnectionListener(final ConnectionListener connectionListener)
     {
+    	if (initialized)
+    		connectionListener.initialized(true);
         _connectionListeners.add(connectionListener);
     }
 
