@@ -1,5 +1,6 @@
 package jahspotify.impl;
 
+import jahspotify.Bitrate;
 import jahspotify.ConnectionListener;
 import jahspotify.JahSpotify;
 import jahspotify.PlaybackListener;
@@ -654,6 +655,13 @@ public class JahSpotifyImpl implements JahSpotify
         ensureLoggedIn();
         nativeResume();
     }
+    
+	@Override
+	public void setBitrate(Bitrate rate) {
+		if (!initialized)
+			throw new RuntimeException("libJah'Spotify isn't initialized yet.");
+		setBitrate(rate.ordinal());
+	}
 
     private native int nativeResume();
 
@@ -847,6 +855,7 @@ public class JahSpotifyImpl implements JahSpotify
     private native Playlist retrievePlaylist(String uri);
     private native SearchResult retrieveTopList(int type, int countrycode);
 
+    private native void setBitrate(int bitrate);
     private native int nativePlayTrack(String uri);
     private native void nativeStopTrack();
     private native void nativeTrackSeek(int offset);

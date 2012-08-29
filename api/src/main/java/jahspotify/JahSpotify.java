@@ -110,6 +110,12 @@ public interface JahSpotify
      */
     public SearchResult getTopList(TopListType type, String country);
 
+    /**
+     * Sets the bitrate for the tracks.
+     * @param rate
+     */
+    public void setBitrate(Bitrate rate);
+    
     /** Pauses the currently playing track.  Does nothing if nothing is currently playing
      *
      */

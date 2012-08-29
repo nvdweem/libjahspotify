@@ -1323,6 +1323,10 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeStopTrack(JNIEn
 	sp_session_player_unload(g_sess);
 }
 
+JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_setBitrate(JNIEnv * env, jobject obj, jint rate) {
+	sp_session_preferred_bitrate(g_sess, rate);
+}
+
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativePlayTrack(JNIEnv *env, jobject obj, jstring uri) {
 	const char *nativeURI = NULL;
 
