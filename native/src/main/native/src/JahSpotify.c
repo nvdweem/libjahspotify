@@ -1260,7 +1260,7 @@ static void SP_CALLCONV toplistCallback(sp_toplistbrowse *result, void *userdata
 }
 JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTopList(JNIEnv *env, jobject obj, jint type, jint countrycode) {
 	jobject searchResult = createSearchResult(env);
-	sp_toplistbrowse_create(g_sess, (int) type, countrycode == -1 ? SP_TOPLIST_REGION_EVERYWHERE : countrycode, NULL, toplistCallback, searchResult);
+	sp_toplistbrowse_create(g_sess, (int) type, countrycode == -1 ? SP_TOPLIST_REGION_EVERYWHERE : countrycode, NULL, toplistCallback, (*env)->NewGlobalRef(env, searchResult));
 	return searchResult;
 }
 

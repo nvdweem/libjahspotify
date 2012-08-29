@@ -696,7 +696,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 	int numResultsFound = 0;
 	int index = 0;
 
-	log_debug("jahspotify", "toplistCallback", "Search complete: token: %d");
+	log_debug("jahspotify", "signalToplistComplete", "Search complete: token: %d");
 
 	if (!retrieveEnv((JNIEnv*) &env)) {
 		goto fail;
@@ -720,7 +720,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 					sp_link_release(link);
 				}
 			} else {
-				log_error("jahspotify", "toplistCallback", "Track not loaded");
+				log_error("jahspotify", "signalToplistComplete", "Track not loaded");
 			}
 			sp_track_release(track);
 		}
@@ -745,7 +745,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 					sp_link_release(link);
 				}
 			} else {
-				log_error("jahspotify", "signalSearchComplete", "Album not loaded");
+				log_error("jahspotify", "signalToplistComplete", "Album not loaded");
 			}
 			sp_album_release(album);
 		}
@@ -770,7 +770,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 					sp_link_release(link);
 				}
 			} else {
-				log_error("jahspotify", "signalSearchComplete", "Artist not loaded");
+				log_error("jahspotify", "signalToplistComplete", "Artist not loaded");
 			}
 			sp_artist_release(artist);
 		}
@@ -784,6 +784,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 	fail:
 
 	exit: sp_toplistbrowse_release(result);
+	(*env)->DeleteGlobalRef(env, nativeSearchResult);
 	detachThread();
 }
 
