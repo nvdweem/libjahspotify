@@ -69,6 +69,55 @@ For windows, you will need to download a few more dependencies:
 
   Contains all native & JNI code interacting with libspotify.
 
+## Example
+
+This example shows how to initialize libJahSpotify and start playing a song.
+
+	public class Main {
+	
+		public static void main(String[] args) throws InterruptedException {
+			// Determine the tempfolder and make sure it exists.
+			File temp = new File(new File(Main.class.getResource("Main.class").getFile()).getParentFile(), "temp");
+			temp.mkdirs();
+			
+			// Start JahSpotify
+			JahSpotifyService.initialize(temp);
+			JahSpotifyService.getInstance().getJahSpotify().addConnectionListener(new AbstractConnectionListener() {
+				@Override
+				public void initialized(boolean initialized) {
+					
+					// Ask for the username and password.
+					BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+					String username = null, password = null;
+					try {
+						System.out.print("Username: ");
+						username = in.readLine();
+						System.out.print("Password: ");
+						password = in.readLine();
+					} catch (IOException e) {
+						e.printStackTrace();
+						System.exit(1);
+					}
+					
+					// When JahSpotify is initialized, we can attempt to login.
+					if (initialized)
+						JahSpotifyService.getInstance().getJahSpotify().login(username, password, null, false);
+				}
+				
+				@Override
+				public void loggedIn() {
+					// Get a track.
+					Track t = JahSpotifyService.getInstance().getJahSpotify().readTrack(Link.create("spotify:track:6JEK0CvvjDjjMUBFoXShNZ"), null);
+					// Wait for 10 seconds or until the track is loaded.
+					MediaHelper.waitFor(t, 10);
+					// If the track is loaded, play it.
+					if (t.isLoaded())
+						JahSpotifyService.getInstance().getJahSpotify().play(t.getId());
+				}
+			});
+		}
+	
+	}
 
 ## Licensing
 
