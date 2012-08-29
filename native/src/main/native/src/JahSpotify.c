@@ -1209,15 +1209,8 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTrack(JNIE
 
 	sp_track *track = sp_link_as_track(link);
 
-	int count = 0;
-	while (!sp_track_is_loaded(track) && count < 4) {
-		usleep(250);
-		count++;
-	}
-
-	if (count == 4) {
-		log_warn("jahspotify", "retrieveTrack", "Track not loaded after 1 second, will have to wait for callback");
-		return NULL ;
+	if (!sp_track_is_loaded(track)) {
+		return NULL;
 	}
 
 	trackInstance = createJTrackInstance(env, track);

@@ -41,7 +41,7 @@ public class Media implements Loadable
     /**
      * Shows if the browse function has completed yet.
      */
-    private boolean loaded = false;
+    protected boolean loaded = false;
 
     /**
      * Creates an empty {@link Media} object.

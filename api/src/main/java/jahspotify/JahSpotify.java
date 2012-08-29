@@ -55,11 +55,22 @@ public interface JahSpotify
     public Artist readArtist(Link link, boolean browse);
 
     /** Read the information for the specified track.
-     *
-     * @param link The link for the track in question
-     * @return The read track or null if it could not be read
-     */
-    public Track readTrack(Link link);
+    *
+    * @param link The link for the track in question
+    * @return The read and loaded track or null if it could not be read.
+    */
+   public Track readTrack(Link link);
+   
+   /**
+    * Reads the information for the specified track.
+    * @param link The link for the track in question.
+    * @param timeout The amount of ms to block while waiting for the track to load. 
+    * 		 		 If the timeout has been reached, the track will still be completed 
+    * 				 after loading but the call won't be blocking anymore. Giving null
+    * 				 will not block the call at all.
+    * @return The read track, Track.isLoaded will return false until the track is loaded.
+    */
+   public Track readTrack(final Link link, final Integer timeout);
 
     /** Read the information for the specified album.
      *

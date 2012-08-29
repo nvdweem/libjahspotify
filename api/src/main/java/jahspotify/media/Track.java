@@ -63,6 +63,27 @@ public class Track extends Media
         this.trackNumber = -1;
         this.length = -1;
         this.cover = null;
+        setLoaded(true);
+    }
+    
+    /**
+     * Merges the current track with the given track.
+     * @param t The track from whick all properties will be copied.
+     */
+    public void merge(Track t) {
+    	setId(t.getId());
+    	setLastModified(t.getLastModified());
+    	setRestrictions(t.getRestrictions());
+    	setExternalIds(t.getExternalIds());
+    	
+    	setTitle(t.getTitle());
+    	setArtists(t.getArtists());
+    	setAlbum(t.getAlbum());
+    	setTrackNumber(t.getTrackNumber());
+    	setLength(t.getLength());
+    	setCover(t.getCover());
+    	setExplicit(t.isExplicit());
+    	setPopularity(t.getPopularity());
     }
 
     /**
@@ -238,15 +259,6 @@ public class Track extends Media
      */
 	public void setPopularity(int popularity) {
 		this.popularity = popularity;
-	}
-
-    /**
-     * Tracks don't need loading and are always complete.
-     * @return true if the media is complete.
-     */
-	@Override
-	public boolean isLoaded() {
-		return true;
 	}
 
 	@Override
