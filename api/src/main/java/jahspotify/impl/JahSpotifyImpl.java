@@ -213,17 +213,16 @@ public class JahSpotifyImpl implements JahSpotify
             }
 
             @Override
-            public void loggedIn(boolean success)
+            public void loggedIn(final boolean success)
             {
                 _log.debug("Login result: " + success);
                 _loggedIn = success;
                 _connected = success;
                 _loggingIn = false;
-                if (!success) return;
                 for (final ConnectionListener listener : _connectionListeners)
                 {
                 	new Thread() {
-                		public void run() {listener.loggedIn();}
+                		public void run() {listener.loggedIn(success);}
                 	}.start();
                 }
             }
