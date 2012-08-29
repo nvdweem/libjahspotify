@@ -1,11 +1,4 @@
 #include "Logging.h"
-#include "JNIHelpers.h"
-#include "jni_md.h"
-#include "jni.h"
-
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
 
 extern jclass g_loggerClass;
 
@@ -86,5 +79,27 @@ void log_fatal(const char *component, const char *subComponent, char *format, ..
 	va_start(args, format);
 	logToJava("fatal", component, subComponent, format, args);
 	va_end(args);
+}
+
+void log_d(jobject o) {
+	jmethodID jMethod = NULL;
+	JNIEnv* env = NULL;
+
+	if (!retrieveEnv((JNIEnv*) &env)) {
+		goto fail;
+	}
+
+	jMethod = (*env)->GetStaticMethodID(env, g_loggerClass, "d", "(Ljava/lang/Object;)V");
+
+	if (!jMethod) {
+		goto fail;
+	}
+
+	(*env)->CallStaticVoidMethod(env, g_loggerClass, jMethod, o);
+
+	fail:
+	detachThread();
+	return;
+
 }
 

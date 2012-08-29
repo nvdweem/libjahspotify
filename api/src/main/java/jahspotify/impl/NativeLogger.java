@@ -80,4 +80,11 @@ public class NativeLogger
             _log.fatal(formatMessage(component, subComponent, message));
         }
     }
+    
+    public static void d(Object o) {
+    	if (o != null)
+    		System.out.println("d: " + o.getClass());
+    	else
+    		System.out.println("d: null");
+    }
 }
