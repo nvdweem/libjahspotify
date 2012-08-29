@@ -75,7 +75,7 @@ This example shows how to initialize libJahSpotify and start playing a song.
 
 	public class Main {
 	
-		public static void main(String[] args) throws InterruptedException {
+		public static void main(String[] args) {
 			// Determine the tempfolder and make sure it exists.
 			File temp = new File(new File(Main.class.getResource("Main.class").getFile()).getParentFile(), "temp");
 			temp.mkdirs();
