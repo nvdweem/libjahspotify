@@ -5,6 +5,7 @@
 #include <libspotify/api.h>
 
 void startPlaybackSignalled();
+int signalInitialized(int initialized);
 int signalLoggedIn(int loggedIn);
 int signalConnected();
 int signalDisconnected();
