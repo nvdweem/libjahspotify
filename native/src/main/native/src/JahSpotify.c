@@ -1122,7 +1122,7 @@ jobject createJPlaylist(JNIEnv *env, jobject playlistInstance, sp_playlist *play
 	int trackCounter = 0;
 	for (trackCounter = 0; trackCounter < numTracks; trackCounter++) {
 		sp_track *track = sp_playlist_track(playlist, trackCounter);
-		if (track && sp_track_get_availability(g_sess, track) == SP_TRACK_AVAILABILITY_AVAILABLE) {
+		if (track && sp_track_get_availability(g_sess, track) <= SP_TRACK_AVAILABILITY_AVAILABLE) {
 			sp_track_add_ref(track);
 			sp_link *trackLink = sp_link_create_from_track(track, 0);
 			if (trackLink) {
@@ -1136,8 +1136,10 @@ jobject createJPlaylist(JNIEnv *env, jobject playlistInstance, sp_playlist *play
 
 		}
 	}
-	setObjectBooleanField(env, playlistInstance, "loaded", JNI_TRUE);
-	signalPlaylistLoaded(playlistInstance);
+	if (sp_playlist_is_loaded(playlist)) {
+		setObjectBooleanField(env, playlistInstance, "loaded", JNI_TRUE);
+		signalPlaylistLoaded(playlistInstance);
+	}
 	return playlistInstance;
 }
 
