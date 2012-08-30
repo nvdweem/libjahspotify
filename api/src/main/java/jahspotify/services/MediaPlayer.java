@@ -153,8 +153,7 @@ public class MediaPlayer implements PlaybackListener {
 	}
 
 	public void seekCallback(int position) {
-		audio = null;
-		positionOffset = position / 1000;
+		positionOffset = position - ((int) audio.getMicrosecondPosition() / 1000);
 	}
 
 	/**
@@ -246,7 +245,7 @@ public class MediaPlayer implements PlaybackListener {
 	public int getPosition() {
 		if (audio == null)
 			return 0;
-		return (int)((positionOffset + audio.getFramePosition() / (float)this.rate) * 1000);
+		return positionOffset + (int) audio.getMicrosecondPosition() / 1000;
 	}
 
 	public int getVolume() {
