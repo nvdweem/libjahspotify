@@ -95,7 +95,7 @@ public class MediaPlayer implements PlaybackListener {
 	 * @param track
 	 * @return
 	 */
-	private void playNow(Track track) {
+	public void playNow(Track track) {
 		spotify.play(track.getId());
 		currentTrack = track;
 		changeSong();
@@ -237,13 +237,13 @@ public class MediaPlayer implements PlaybackListener {
 	public int getDuration() {
 		if (currentTrack == null)
 			return 0;
-		return currentTrack.getLength() / 1000;
+		return currentTrack.getLength();
 	}
 
 	public int getPosition() {
 		if (audio == null)
 			return 0;
-		return positionOffset + audio.getFramePosition() / this.rate;
+		return (int)((positionOffset + audio.getFramePosition() / (float)this.rate) * 1000);
 	}
 
 	public int getVolume() {
@@ -258,12 +258,14 @@ public class MediaPlayer implements PlaybackListener {
 	private void setVolumeToAudio(int volume) {
 		if (audio == null) return;
 		if (audio.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-			FloatControl volumeControl = (FloatControl) audio
-					.getControl(FloatControl.Type.MASTER_GAIN);
-			float range = volumeControl.getMaximum()
-					- volumeControl.getMinimum();
-			volumeControl.setValue(volumeControl.getMinimum() + range
-					* (volume / 100f));
+			FloatControl volumeControl = (FloatControl) audio.getControl(FloatControl.Type.MASTER_GAIN);
+			
+			// Copied from: http://www.javadocexamples.com/java_source/com/limegroup/gnutella/gui/mp3/BasicPlayer.java.html#line.615
+			double minGainDB = volumeControl.getMinimum();
+			double ampGainDB = Math.min(.5*volumeControl.getMaximum(), 0) - volumeControl.getMinimum();
+			double cste = Math.log(10.0)/20;
+			double valueDB = minGainDB + (1/cste)*Math.log(1+(Math.exp(cste*ampGainDB)-1)* (volume / 100f));
+			volumeControl.setValue((float)valueDB);
 		}
 	}
 
