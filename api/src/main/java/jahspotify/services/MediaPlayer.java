@@ -147,8 +147,8 @@ public class MediaPlayer implements PlaybackListener {
 	public void seek(int position) {
 		if (currentTrack != null) {
 			audio.flush();
-			spotify.seek(position * 1000);
-			seekCallback(position * 1000);
+			spotify.seek(position);
+			seekCallback(position);
 		}
 	}
 
