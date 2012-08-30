@@ -118,10 +118,13 @@ public class MediaPlayer implements PlaybackListener {
 			next();
 			return;
 		}
-		if (playing)
+		if (playing) {
 			spotify.pause();
-		else
+			audio.stop();
+		} else {
 			spotify.resume();
+			audio.start();
+		}
 		playing = !playing;
 	}
 
