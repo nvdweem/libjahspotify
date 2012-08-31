@@ -44,6 +44,8 @@ public class MediaPlayer implements PlaybackListener {
 	 * Reset counters.
 	 */
 	public void changeSong() {
+		if (audio != null && audio.isOpen())
+			audio.close();
 		audio = null;
 		positionOffset = 0;
 	}
@@ -286,6 +288,12 @@ public class MediaPlayer implements PlaybackListener {
 
 	@Override
 	public void trackEnded(Link link, boolean forcedEnd) {
+		if (!forcedEnd) {
+			if (audio != null && audio.isOpen()) {
+				audio.drain();
+			}
+		}
+			
 		if (!next()) {
 			pause();
 			currentTrack = null;
