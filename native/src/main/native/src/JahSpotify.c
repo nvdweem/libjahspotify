@@ -1468,7 +1468,7 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIE
 
 	const char* nativeCacheFolder = (*env)->GetStringUTFChars(env, cacheFolder, NULL );
 
-	log_error("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize", "Using the following cache and setting location: %s\n", nativeCacheFolder);
+	log_debug("jahspotify", "Java_jahspotify_impl_JahSpotifyImpl_initialize", "Using the following cache and setting location: %s\n", nativeCacheFolder);
 	spconfig.cache_location = nativeCacheFolder;
 	spconfig.settings_location = nativeCacheFolder;
 
