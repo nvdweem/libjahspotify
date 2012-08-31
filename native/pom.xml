@@ -78,7 +78,7 @@
                 <OS>mac</OS>
                 <linkeropts>-framework libspotify -ldl</linkeropts>
                 <lstartopts/>
-                <artifact>jahspotify</artifact>
+                <artifact>libjahspotify</artifact>
                 <packaging>jnilib</packaging>
                 <compilerparams>"-I/System/Library/Frameworks/JavaVM.framework/Headers"</compilerparams>
             </properties>

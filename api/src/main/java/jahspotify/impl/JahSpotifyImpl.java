@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JahSpotifyImpl implements JahSpotify
 {
-    private Log _log = LogFactory.getLog(JahSpotify.class);
+    private static Log _log = LogFactory.getLog(JahSpotify.class);
 
     private Lock _libSpotifyLock = new ReentrantLock();
 
@@ -707,7 +707,15 @@ public class JahSpotifyImpl implements JahSpotify
 
     static
     {
-        System.loadLibrary("jahspotify");
+    	try {
+    		// The native-jar is an optional dependency. Use it when it is available.
+			Class<?> loader = Class.forName("jahspotify.JahSpotifyNativeLoader");
+			loader.newInstance();
+		} catch (Exception e) {
+			_log.warn("The native-jar was not found or could not load the required libraries. Trying to load jahspotify without it.");
+			e.printStackTrace();
+			System.loadLibrary("jahspotify");
+		}
     }
 
     @Override

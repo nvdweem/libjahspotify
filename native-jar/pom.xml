@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>jahspotify</groupId>
+		<artifactId>jahspotify-root</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>jahspotify-native-jar</artifactId>
+
+	<name>jahspotify-native-jar</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<target>1.6</target>
+					<source>1.6</source>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4</version>
+			</plugin>
+		</plugins>
+
+		<resources>
+			<resource>
+				<directory>${basedir}/../native/target/</directory>
+				<includes>
+					<include>**/*jahspotify*.dll</include>
+					<include>**/*jahspotify*.so</include>
+					<include>**/*jahspotify*.jnilib</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>${env.LIB_SPOTIFY}/lib/</directory>
+				<includes>
+					<include>libspotify.dll</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>${env.PTHREAD}/</directory>
+				<includes>
+					<include>pthreadGC2.dll</include>
+				</includes>
+			</resource>
+		</resources>
+
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+		</dependency>
+
+	</dependencies>
+
+
+</project>
