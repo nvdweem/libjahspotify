@@ -68,6 +68,11 @@ For windows, you will need to download a few more dependencies:
 * native
 
   Contains all native & JNI code interacting with libspotify.
+  
+* native-jar
+  
+  Creates a jar file with all required dependencies. If you supply this jar with your compiled
+  program, a user won't have to setup its path to run the application.
 
 ## Example
 
