@@ -98,9 +98,9 @@ public class MediaPlayer implements PlaybackListener {
 	 * @return
 	 */
 	public void playNow(Track track) {
+		changeSong();
 		spotify.play(track.getId());
 		currentTrack = track;
-		changeSong();
 		playing = true;
 	}
 
