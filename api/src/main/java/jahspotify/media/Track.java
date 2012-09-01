@@ -10,7 +10,7 @@ import java.util.List;
  * @author Felix Bruns <felixbruns@web.de>
  * @author Johan Lindquist
  */
-public class Track extends Media
+public class Track extends Media<Track>
 {
     /**
      * Title of this track.
@@ -63,29 +63,8 @@ public class Track extends Media
         this.trackNumber = -1;
         this.length = -1;
         this.cover = null;
-        setLoaded(true);
     }
     
-    /**
-     * Merges the current track with the given track.
-     * @param t The track from whick all properties will be copied.
-     */
-    public void merge(Track t) {
-    	setId(t.getId());
-    	setLastModified(t.getLastModified());
-    	setRestrictions(t.getRestrictions());
-    	setExternalIds(t.getExternalIds());
-    	
-    	setTitle(t.getTitle());
-    	setArtists(t.getArtists());
-    	setAlbum(t.getAlbum());
-    	setTrackNumber(t.getTrackNumber());
-    	setLength(t.getLength());
-    	setCover(t.getCover());
-    	setExplicit(t.isExplicit());
-    	setPopularity(t.getPopularity());
-    }
-
     /**
      * Get the tracks title.
      *

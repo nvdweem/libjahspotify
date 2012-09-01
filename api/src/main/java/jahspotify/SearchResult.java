@@ -1,7 +1,7 @@
 package jahspotify;
 
+import jahspotify.media.AbstractLoadable;
 import jahspotify.media.Link;
-import jahspotify.media.Loadable;
 import jahspotify.media.Playlist;
 
 import java.util.List;
@@ -9,10 +9,8 @@ import java.util.List;
 /**
  * @author Johan Lindquist
  */
-public class SearchResult implements Loadable
+public class SearchResult extends AbstractLoadable<SearchResult>
 {
-	private boolean loaded = false;
-
    private String query;
    private String didYouMean;
    private List<Link> tracksFound;
@@ -113,13 +111,4 @@ public class SearchResult implements Loadable
                 '}';
     }
 
-	@Override
-	public void setLoaded(boolean loaded) {
-		this.loaded = loaded;
-	}
-
-	@Override
-	public boolean isLoaded() {
-		return loaded;
-	}
 }

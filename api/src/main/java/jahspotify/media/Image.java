@@ -5,12 +5,11 @@ import java.util.Arrays;
 /**
  * @author Johan Lindquist
  */
-public class Image implements Loadable
+public class Image extends AbstractLoadable<Image>
 {
     private Link id;
     private ImageFormat imageFormat = ImageFormat.JPEG;
     private byte[] bytes;
-    private boolean loaded = false;
 
     public Image()
     {
@@ -57,13 +56,4 @@ public class Image implements Loadable
                 '}';
     }
 
-	@Override
-	public boolean isLoaded() {
-		return loaded;
-	}
-
-	@Override
-	public void setLoaded(boolean loaded) {
-		this.loaded = loaded;
-	}
 }

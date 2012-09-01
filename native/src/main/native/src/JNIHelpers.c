@@ -72,6 +72,23 @@ jint invokeVoidMethod_II(JNIEnv *env, jobject instance, const char *methodName, 
 	return 0;
 }
 
+jint invokeVoidMethod_Z(JNIEnv *env, jobject instance, const char *methodName, jboolean arg1) {
+	jclass clazz;
+	jmethodID methodId;
+
+	clazz = (*env)->GetObjectClass(env, instance);
+	if (clazz == NULL ) return 1;
+
+	methodId = (*env)->GetMethodID(env, clazz, methodName, "(Z)V");
+	(*env)->DeleteLocalRef(env, clazz);
+
+	if (methodId == NULL ) return 1;
+
+	(*env)->CallVoidMethod(env, instance, methodId, arg1);
+
+	return 0;
+}
+
 jint invokeIntMethod_B(JNIEnv *env, jobject instance, const char *methodName, int *returnValue, jbyteArray arr) {
 	jclass clazz;
 	jmethodID methodId;

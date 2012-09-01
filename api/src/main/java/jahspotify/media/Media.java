@@ -11,7 +11,7 @@ import java.util.Map;
  *
  * @author Felix Bruns <felixbruns@web.de>
  */
-public class Media implements Loadable
+public class Media<T extends Loadable> extends AbstractLoadable<T>
 {
     /**
      * Identifier for this media object (32-character hex string).
@@ -37,11 +37,6 @@ public class Media implements Loadable
      * External ids of this media.
      */
     private Map<String, String> externalIds;
-
-    /**
-     * Shows if the browse function has completed yet.
-     */
-    protected boolean loaded = false;
 
     /**
      * Creates an empty {@link Media} object.
@@ -182,21 +177,4 @@ public class Media implements Loadable
         this.externalIds = externalIds;
     }
 
-    /**
-     * Returns if the media is complete.
-     * @return true if the media is complete.
-     */
-	@Override
-	public boolean isLoaded() {
-		return loaded;
-	}
-
-	/**
-	 * Marks the media as complete.
-	 * @param browsed true if the media is complete.
-	 */
-	@Override
-	public void setLoaded(boolean loaded) {
-		this.loaded = loaded;
-	}
 }

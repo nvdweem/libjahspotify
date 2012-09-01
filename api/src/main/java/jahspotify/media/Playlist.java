@@ -11,7 +11,7 @@ import java.util.List;
  * @author Felix Bruns <felixbruns@web.de>
  * @author Johan Lindquist
  */
-public class Playlist implements Loadable
+public class Playlist extends AbstractLoadable<Playlist>
 {
     private Link id;
     private String name;
@@ -24,7 +24,6 @@ public class Playlist implements Loadable
     private List<Link> tracks;
     private int numTracks;
     private int index;
-    private boolean loaded;
 
     public Playlist()
     {
@@ -249,13 +248,4 @@ public class Playlist implements Loadable
                 "} " + super.toString();
     }
 
-	@Override
-	public void setLoaded(boolean loaded) {
-		this.loaded = loaded;
-	}
-
-	@Override
-	public boolean isLoaded() {
-		return loaded;
-	}
 }

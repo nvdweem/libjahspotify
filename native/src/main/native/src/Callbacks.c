@@ -436,7 +436,7 @@ int signalArtistBrowseLoaded(sp_artistbrowse *artistBrowse, jobject artistInstan
 	// Pass it up in the callback
 	populateJArtistInstanceFromArtistBrowse(env, artistBrowse, artistInstance);
 
-	setObjectBooleanField(env, artistInstance, "loaded", JNI_TRUE);
+	invokeVoidMethod_Z(env, artistInstance, "setLoaded", JNI_TRUE);
 	(*env)->CallVoidMethod(env, g_mediaLoadedListener, aMethod, 0, artistInstance);
 	if (checkException(env) != 0) {
 		log_error("callbacks", "signalArtistBrowseLoaded", "Exception while calling callback");
@@ -494,7 +494,7 @@ int signalImageLoaded(sp_image *image, jobject imageInstance) {
 	setObjectObjectField(env, imageInstance, "bytes", "[B", byteArray);
 	(*env)->DeleteLocalRef(env, byteArray);
 
-	setObjectBooleanField(env, imageInstance, "loaded", JNI_TRUE);
+	invokeVoidMethod_Z(env, imageInstance, "setLoaded", JNI_TRUE);
 	(*env)->CallVoidMethod(env, g_mediaLoadedListener, method, 0, jLink, NULL, NULL);
 
 	if (checkException(env) != 0) {
@@ -604,7 +604,7 @@ int signalAlbumBrowseLoaded(sp_albumbrowse *albumBrowse, jobject albumInstance) 
 	populateJAlbumInstanceFromAlbumBrowse(env, album, albumBrowse, albumInstance);
 
 	(*env)->CallVoidMethod(env, g_mediaLoadedListener, aMethod, 0, albumInstance);
-	setObjectBooleanField(env, albumInstance, "loaded", JNI_TRUE);
+	invokeVoidMethod_Z(env, albumInstance, "setLoaded", JNI_TRUE);
 
 	if (checkException(env) != 0) {
 		log_error("callbacks", "signalAlbumBrowseLoaded", "Exception while calling callback");
@@ -777,7 +777,7 @@ void signalToplistComplete(sp_toplistbrowse *result, jobject nativeSearchResult)
 	}
 	if (artistLinkCollection) (*env)->DeleteLocalRef(env, artistLinkCollection);
 
-	setObjectBooleanField(env, nativeSearchResult, "loaded", JNI_TRUE);
+	invokeVoidMethod_Z(env, nativeSearchResult, "setLoaded", JNI_TRUE);
 
 	goto exit;
 

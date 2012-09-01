@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @author Felix Bruns <felixbruns@web.de>
  */
-public class Artist extends Media
+public class Artist extends Media<Artist>
 {
     /**
      * Name of this artist.

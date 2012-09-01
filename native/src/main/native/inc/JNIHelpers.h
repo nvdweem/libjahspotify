@@ -24,6 +24,7 @@ jobject createInstanceFromJClass(JNIEnv *env, jclass jClass);
 
 jint invokeVoidMethod(JNIEnv *env, jobject instance, const char *methodName);
 jint invokeVoidMethod_II(JNIEnv *env, jobject instance, const char *methodName, jint arg1, jint arg2);
+jint invokeVoidMethod_Z(JNIEnv *env, jobject instance, const char *methodName, jboolean arg1);
 jint invokeIntMethod_B(JNIEnv *env, jobject instance, const char *methodName, int *returnValue, jbyteArray arr);
 
 jint checkException(JNIEnv *env);

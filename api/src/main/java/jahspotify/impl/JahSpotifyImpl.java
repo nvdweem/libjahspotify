@@ -402,60 +402,6 @@ public class JahSpotifyImpl implements JahSpotify
             _libSpotifyLock.unlock();
         }
     }
-    
-    @Override
-	public Track readTrack(final Link link, final Integer timeout) {
-		Track read = readTrack(link);
-		if (read != null)
-			return read;
-		
-		final Track result = new Track();
-		result.setLoaded(false);
-		result.setId(link);
-		
-		// Thread to read the track.
-		Thread readThread = new Thread() {
-
-			public void run() {
-				Track t;
-				
-				long start = System.currentTimeMillis();
-				do {
-					t = readTrack(link);
-					
-					// Not loaded, wait for 100ms before trying again.
-					if (t == null) {
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							break;
-						}
-					}
-					
-					// If the track is not loaded and we have been trying for longer
-					// than the timeout, continue as an actual thread.
-					if (!isStarted() && timeout != null && System.currentTimeMillis() - start > timeout && t == null) {
-						start();
-						break;
-					}
-				}
-				while (t == null);
-				
-				if (t != null) {
-					result.merge(t);
-					result.setLoaded(true);
-				}
-			}
-			
-		};
-		
-		if (timeout != null)
-			readThread.run();
-		else
-			readThread.start();
-		
-		return result;
-	}
 
     @Override
     public Image readImage(Link uri)

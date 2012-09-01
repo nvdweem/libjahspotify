@@ -9,7 +9,7 @@ import java.util.List;
  * @author Felix Bruns <felixbruns@web.de>
  * @author Johan Lindquist
  */
-public class Album extends Media
+public class Album extends Media<Album>
 {
     /**
      * Name of this album.
