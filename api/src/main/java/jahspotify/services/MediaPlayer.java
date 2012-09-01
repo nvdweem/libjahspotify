@@ -101,7 +101,6 @@ public class MediaPlayer implements PlaybackListener {
 		changeSong();
 		spotify.play(track.getId());
 		currentTrack = track;
-		playing = true;
 	}
 
 	/**
@@ -283,7 +282,7 @@ public class MediaPlayer implements PlaybackListener {
 
 	@Override
 	public void trackStarted(Link link) {
-
+		playing = true;
 	}
 
 	@Override
