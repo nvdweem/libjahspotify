@@ -58,7 +58,8 @@ static int g_playback_done;
 static int g_stop_after_logout = 0;
 static int g_stop = 0;
 
-static track *loading = NULL;
+static media *loading = NULL;
+static pthread_mutex_t g_loading_mutex;
 
 void populateJAlbumInstanceFromAlbumBrowse(JNIEnv *env, sp_album *album, sp_albumbrowse *albumBrowse, jobject albumInstance);
 void populateJArtistInstanceFromArtistBrowse(JNIEnv *env, sp_artistbrowse *artistBrowse, jobject artist);
@@ -66,7 +67,11 @@ jobject createJPlaylistInstance(JNIEnv *env, sp_link* link, const char* name, sp
 jobject createJArtistInstance(JNIEnv *env, sp_artist *artist, int browse);
 jobject createJAlbumInstance(JNIEnv *env, sp_album *album, int browse);
 jobject createJTrackInstance(JNIEnv *env, sp_track *track);
+
 void populateJTrackInstance(JNIEnv *env, jobject trackInstance, sp_track *track);
+void populateJAlbumInstance(JNIEnv *env, jobject albumInstance, sp_album *album, int browse);
+void populateJArtistInstance(JNIEnv *env, jobject artistInstance, sp_artist *artist, int browse);
+
 jobject createJPlaylist(JNIEnv *env, jobject playlistInstance, sp_playlist *playlist);
 static sp_playlist_callbacks pl_callbacks;
 
@@ -617,7 +622,7 @@ jobject createJTrackInstance(JNIEnv *env, sp_track *track) {
 	if (sp_track_is_loaded(track))
 		populateJTrackInstance(env, trackInstance, track);
 	else
-		addLoading((*env)->NewGlobalRef(env, trackInstance), track);
+		addLoading((*env)->NewGlobalRef(env, trackInstance), track, NULL, NULL, 0);
 
 	return trackInstance;
 }
@@ -628,6 +633,7 @@ void populateJTrackInstance(JNIEnv *env, jobject trackInstance, sp_track *track)
 	jClass = (*env)->FindClass(env, "jahspotify/media/Track");
 	if (jClass == NULL ) {
 		log_error("jahspotify", "populateJTrackInstance", "Could not load jahnotify.media.Track");
+		sp_track_release(track);
 		return ;
 	}
 
@@ -656,6 +662,7 @@ void populateJTrackInstance(JNIEnv *env, jobject trackInstance, sp_track *track)
 
 				if (jMethod == NULL ) {
 					log_error("jahspotify", "populateJTrackInstance", "Could not load method setAlbum(link) on class Track");
+					sp_track_release(track);
 					return ;
 				}
 
@@ -674,6 +681,7 @@ void populateJTrackInstance(JNIEnv *env, jobject trackInstance, sp_track *track)
 
 			if (jMethod == NULL ) {
 				log_error("jahspotify", "populateJTrackInstance", "Could not load method addArtist(link) on class Track");
+				sp_track_release(track);
 				return ;
 			}
 
@@ -703,6 +711,7 @@ void populateJTrackInstance(JNIEnv *env, jobject trackInstance, sp_track *track)
 		sp_link_release(trackLink);
 	}
 	invokeVoidMethod_Z(env, trackInstance, "setLoaded", JNI_TRUE);
+	sp_track_release(track);
 }
 
 char* toHexString(byte* bytes) {
@@ -810,8 +819,6 @@ jobject createJAlbumInstance(JNIEnv *env, sp_album *album, int browse) {
 	jobject albumInstance;
 	jclass albumJClass;
 
-	sp_album_add_ref(album);
-
 	albumJClass = (*env)->FindClass(env, "jahspotify/media/Album");
 	if (albumJClass == NULL ) {
 		log_error("jahspotify", "createJAlbumInstance", "Could not load jahnotify.media.Album");
@@ -826,7 +833,15 @@ jobject createJAlbumInstance(JNIEnv *env, sp_album *album, int browse) {
 		return NULL ;
 	}
 
-	// By now it looks like the album will also be loaded
+	if (sp_album_is_loaded(album)) {
+		populateJAlbumInstance(env, albumInstance, album, browse);
+	} else {
+		addLoading((*env)->NewGlobalRef(env, albumInstance), NULL, album, NULL, browse);
+	}
+	return albumInstance;
+}
+void populateJAlbumInstance(JNIEnv *env, jobject albumInstance, sp_album *album, int browse) {
+	// By now it looks like the album will be loaded
 	sp_link *albumLink = sp_link_create_from_album(album);
 
 	if (albumLink) {
@@ -855,14 +870,12 @@ jobject createJAlbumInstance(JNIEnv *env, sp_album *album, int browse) {
 		jobject albumCoverJLink = createJLinkInstance(env, albumCoverLink);
 		setObjectObjectField(env, albumInstance, "cover", "Ljahspotify/media/Link;", albumCoverJLink);
 
-		sp_image *albumCoverImage = sp_image_create_from_link(g_sess, albumCoverLink);
-		if (albumCoverImage) {
-//        sp_image_add_ref(albumCoverImage);
-//        sp_image_add_load_callback(albumCoverImage,imageLoadedCallback,NULL);
-		}
-
-		sp_link_release(albumCoverLink);
-
+//		sp_image *albumCoverImage = sp_image_create_from_link(g_sess, albumCoverLink);
+//		if (albumCoverImage) {
+//			sp_image_add_ref(albumCoverImage);
+//        	sp_image_add_load_callback(albumCoverImage,imageLoadedCallback,NULL);
+//		}
+//		sp_link_release(albumCoverLink);
 	}
 
 	sp_artist *artist = sp_album_artist(album);
@@ -884,13 +897,12 @@ jobject createJAlbumInstance(JNIEnv *env, sp_album *album, int browse) {
 		sp_artist_release(artist);
 	}
 
-	if (browse) {
+	if (browse)
 		sp_albumbrowse_create(g_sess, album, albumBrowseCompleteCallback, (*env)->NewGlobalRef(env, albumInstance));
-	}
+	else
+		invokeVoidMethod_Z(env, albumInstance, "setLoaded", JNI_TRUE);
+
 	sp_album_release(album);
-
-	return albumInstance;
-
 }
 
 void populateJArtistInstanceFromArtistBrowse(JNIEnv *env, sp_artistbrowse *artistBrowse, jobject artistInstance) {
@@ -1049,12 +1061,10 @@ void populateJArtistInstanceFromArtistBrowse(JNIEnv *env, sp_artistbrowse *artis
 	}
 
 	sp_artistbrowse_release(artistBrowse);
-
 }
 
 jobject createJArtistInstance(JNIEnv *env, sp_artist *artist, int browse) {
 	jobject artistInstance = NULL;
-	sp_link *artistLink = NULL;
 
 	sp_artist_add_ref(artist);
 
@@ -1068,13 +1078,21 @@ jobject createJArtistInstance(JNIEnv *env, sp_artist *artist, int browse) {
 
 	artistInstance = createInstanceFromJClass(env, jClass);
 
+	if (sp_artist_is_loaded(artist))
+		populateJArtistInstance(env, artistInstance, artist, browse);
+	else
+		addLoading((*env)->NewGlobalRef(env, artistInstance), NULL, NULL, artist, browse);
+	return artistInstance;
+}
+
+void populateJArtistInstance(JNIEnv *env, jobject artistInstance, sp_artist *artist, int browse) {
+	sp_link *artistLink = NULL;
 	artistLink = sp_link_create_from_artist(artist);
 
 	if (artistLink) {
 		sp_link_add_ref(artistLink);
 
 		jobject artistJLink = createJLinkInstance(env, artistLink);
-
 		setObjectObjectField(env, artistInstance, "id", "Ljahspotify/media/Link;", artistJLink);
 
 		sp_link_release(artistLink);
@@ -1084,10 +1102,11 @@ jobject createJArtistInstance(JNIEnv *env, sp_artist *artist, int browse) {
 		if (browse > 0)
 			sp_artistbrowse_create(g_sess, artist, browse == 1 ? SP_ARTISTBROWSE_NO_TRACKS : SP_ARTISTBROWSE_NO_ALBUMS, artistBrowseCompleteCallback,
 					(*env)->NewGlobalRef(env, artistInstance));
+		else
+			invokeVoidMethod_Z(env, artistInstance, "setLoaded", JNI_TRUE);
 	}
 
 	sp_artist_release(artist);
-	return artistInstance;
 }
 
 jobject createJPlaylist(JNIEnv *env, jobject playlistInstance, sp_playlist *playlist) {
@@ -1177,7 +1196,6 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveArtist(JNI
 		if (artist) {
 			sp_artist_add_ref(artist);
 			artistInstance = createJArtistInstance(env, artist, browse);
-			sp_artist_release(artist);
 		}
 		sp_link_release(link);
 	}
@@ -1199,10 +1217,7 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveAlbum(JNIE
 
 		if (album) {
 			sp_album_add_ref(album);
-
 			albumInstance = createJAlbumInstance(env, album, browse ? 1 : 0);
-
-			sp_album_release(album);
 		}
 		sp_link_release(link);
 	}
@@ -1235,7 +1250,6 @@ JNIEXPORT jobject JNICALL Java_jahspotify_impl_JahSpotifyImpl_retrieveTrack(JNIE
 
 	trackInstance = createJTrackInstance(env, track);
 
-	if (track && sp_track_is_loaded(track)) sp_track_release(track);
 	if (link) sp_link_release(link);
 	if (nativeUri) (*env)->ReleaseStringUTFChars(env, uri, nativeUri);
 
@@ -1477,12 +1491,11 @@ static void track_ended(void) {
 }
 
 JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeInitialize(JNIEnv *env, jobject obj, jstring cacheFolder) {
-	log_error("", "", "V2");
-
 	sp_session *sp;
 	sp_error err;
 	int next_timeout = 0;
 
+	pthread_mutex_init(&g_loading_mutex, NULL );
 	pthread_mutex_init(&g_notify_mutex, NULL );
 	pthread_cond_init(&g_notify_cond, NULL );
 
@@ -1617,26 +1630,36 @@ JNIEXPORT jint JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeDestroy(JNIEnv 
 }
 
 
-void addLoading(jobject javatrack, sp_track* sptrack) {
-	track *ltrack = malloc(sizeof *ltrack);
+void addLoading(jobject javainstance, sp_track* track, sp_album* album, sp_artist* artist, int browse) {
+	pthread_mutex_lock(&g_loading_mutex);
 
-	ltrack->prev = NULL;
-	ltrack->next = loading;
-	ltrack->javatrack = javatrack;
-	ltrack->track = sptrack;
+	media *lmedia = malloc(sizeof *lmedia);
+	lmedia->prev = NULL;
+	lmedia->next = loading;
+	lmedia->javainstance = javainstance;
+	lmedia->track = track;
+	lmedia->album = album;
+	lmedia->artist = artist;
+	lmedia->browse = browse;
 
 	if (loading != NULL)
-		loading->prev = ltrack;
-	else
-		loading = ltrack;
+		loading->prev = lmedia;
+	loading = lmedia;
+
+	pthread_mutex_unlock(&g_loading_mutex);
 }
 
 void checkLoaded() {
+	pthread_mutex_lock(&g_loading_mutex);
+
 	JNIEnv* env = NULL;
 
-	track *checkload = loading;
+	media *checkload = loading;
 	while (checkload != NULL) {
-		if (sp_track_is_loaded(checkload->track)) {
+
+		if (  (checkload->track && sp_track_is_loaded(checkload->track))
+		   || (checkload->artist && sp_artist_is_loaded(checkload->artist))
+		   || (checkload->album && sp_album_is_loaded(checkload->album))) {
 			if (loading == checkload) { // First
 				loading = checkload->next;
 				if (loading != NULL)
@@ -1649,16 +1672,25 @@ void checkLoaded() {
 			}
 
 			if (!env && !retrieveEnv((JNIEnv*) &env)) return;
-			populateJTrackInstance(env, checkload->javatrack, checkload->track);
-			(*env)->DeleteGlobalRef(env, checkload->javatrack);
 
-			sp_track_release(checkload->track);
-			track *toFree = checkload;
+			if (checkload->track) {
+				populateJTrackInstance(env, checkload->javainstance, checkload->track);
+			} else if (checkload->artist) {
+				populateJArtistInstance(env, checkload->javainstance, checkload->artist, checkload->browse);
+			} else if (checkload->album) {
+				populateJAlbumInstance(env, checkload->javainstance, checkload->album, checkload->browse);
+			}
+			(*env)->DeleteGlobalRef(env, checkload->javainstance);
+
+			media *toFree = checkload;
 			checkload = checkload->next;
 			free(toFree);
-		} else
+		} else {
 			checkload = checkload->next;
+		}
 	}
 	if (env)
 		detachThread();
+
+	pthread_mutex_unlock(&g_loading_mutex);
 }
