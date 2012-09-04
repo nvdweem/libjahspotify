@@ -209,7 +209,6 @@ public class JahSpotifyImpl implements JahSpotify
             public void disconnected()
             {
                 _log.debug("Disconnected");
-                MediaPlayer.getInstance().pause(false);
                 _connected = false;
             }
 
