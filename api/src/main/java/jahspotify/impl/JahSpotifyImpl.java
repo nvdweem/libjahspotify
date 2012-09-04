@@ -19,6 +19,7 @@ import jahspotify.media.Track;
 import jahspotify.media.User;
 import jahspotify.services.JahSpotifyService;
 import jahspotify.services.MediaHelper;
+import jahspotify.services.MediaPlayer;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -208,8 +209,8 @@ public class JahSpotifyImpl implements JahSpotify
             public void disconnected()
             {
                 _log.debug("Disconnected");
+                MediaPlayer.getInstance().pause(false);
                 _connected = false;
-                _loggedIn = false;
             }
 
             @Override

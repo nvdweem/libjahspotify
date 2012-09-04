@@ -128,6 +128,11 @@ public class MediaPlayer implements PlaybackListener {
 		}
 		playing = !playing;
 	}
+	
+	public void pause(boolean play) {
+		if (play == playing) return;
+		pause();
+	}
 
 	public void skip() {
 		endOfTrack();
