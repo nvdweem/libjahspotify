@@ -29,6 +29,10 @@ public class JahSpotifyNativeLoader {
 			toLoad.add("libspotify.dll"); // Non-Windows users should have installed this as a library.
 			toLoad.add("pthreadGC2.dll"); // Required for Windows only.
 		}
+		// libspotify for linux users.
+		if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+			toLoad.add("libspotify.so");
+		}
 		toLoad.add(System.mapLibraryName("jahspotify"));
 
 		boolean allLoaded = true;

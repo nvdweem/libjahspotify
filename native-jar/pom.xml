@@ -46,6 +46,7 @@
 				<directory>${env.LIB_SPOTIFY}/lib/</directory>
 				<includes>
 					<include>libspotify.dll</include>
+					<include>libspotify.so</include>
 				</includes>
 			</resource>
 			<resource>
