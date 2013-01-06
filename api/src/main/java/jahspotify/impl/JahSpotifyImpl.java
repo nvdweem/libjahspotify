@@ -54,6 +54,7 @@ public class JahSpotifyImpl implements JahSpotify
     private boolean _loggingIn = false;
     private boolean _connected;
     private boolean initialized = false;
+    private boolean playlistsLoadedBefore = false;
 
     private List<PlaybackListener> _playbackListeners = new ArrayList<PlaybackListener>();
     private List<ConnectionListener> _connectionListeners = new ArrayList<ConnectionListener>();
@@ -261,7 +262,8 @@ public class JahSpotifyImpl implements JahSpotify
 
 			@Override
 			public void playlistsLoaded() {
-
+				if (playlistsLoadedBefore) return;
+				playlistsLoadedBefore = true;
 				boolean allLoaded = true;
 				for (Playlist pl : PlaylistContainer.getPlaylists()) {
 					if (!pl.isLoaded()) {
@@ -278,8 +280,9 @@ public class JahSpotifyImpl implements JahSpotify
                 	}.start();
                 }
 
-				if (contents)
+				if (contents) {
 					return;
+				}
 
 				// Keep waiting for the contents of the playlists in a new thread.
 				new Thread() {
