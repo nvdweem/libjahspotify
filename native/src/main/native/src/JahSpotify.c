@@ -213,9 +213,29 @@ static void SP_CALLCONV playlist_added(sp_playlistcontainer *pc, sp_playlist *pl
  * @param  userdata      The opaque pointer
  */
 static void SP_CALLCONV playlist_removed(sp_playlistcontainer *pc, sp_playlist *pl, int position, void *userdata) {
+    sp_playlist_remove_callbacks( pl, &pl_callbacks, NULL );
+
 	const char *name = sp_playlist_name(pl);
 	log_debug("jahspotify", "playlist_removed", "Playlist removed: %s", name);
-    sp_playlist_remove_callbacks( pl, &pl_callbacks, NULL );
+
+	JNIEnv* env = NULL;
+	if (!retrieveEnv((JNIEnv*) &env)) return;
+
+	sp_link *link = sp_link_create_from_playlist(pl);
+	char *linkName = malloc(sizeof(char) * 100);
+	sp_link_as_string(link, linkName, 100);
+	jstring jString = (*env)->NewStringUTF(env, linkName);
+
+	jclass jPc = (*env)->FindClass(env, "jahspotify/media/PlaylistContainer");
+	if (jPc == NULL ) {
+		log_error("jahspotify", "container_loaded", "Unable to get playlistcontainer class.");
+		return;
+	}
+	jmethodID jMethod = (*env)->GetStaticMethodID(env, jPc, "removePlaylist", "(Ljava/lang/String;)V");
+	(*env)->CallStaticVoidMethod(env, jPc, jMethod, jString);
+
+	if (linkName) free(linkName);
+	if (jString) (*env)->DeleteLocalRef(env, jString);
 }
 
 /**

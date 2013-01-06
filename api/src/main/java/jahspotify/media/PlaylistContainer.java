@@ -13,6 +13,13 @@ public class PlaylistContainer {
 		playlists.add(playlist);
 	}
 
+	public static void removePlaylist(final String playlist) {
+		for (int i = playlists.size() - 1; i >= 0; i--) {
+			if (playlists.get(i).getId().getId().equals(playlist))
+				playlists.remove(i);
+		}
+	}
+
 	public static void clear() {
 		playlists.clear();
 	}
