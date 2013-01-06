@@ -19,7 +19,8 @@ package jahspotify.impl;
  *        under the License.
  */
 
-import org.apache.commons.logging.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Johan Lindquist
@@ -27,13 +28,16 @@ import org.apache.commons.logging.*;
 public class NativeLogger
 {
     private static Log _log = LogFactory.getLog(NativeLogger.class);
+    public static final boolean SYSOUT = false;
 
-    public static void trace(String component, String subComponent, String message)
+    public static void trace(final String component, final String subComponent, final String message)
     {
         if (_log.isTraceEnabled())
         {
             _log.trace(formatMessage(component, subComponent, message));
         }
+        if (SYSOUT)
+        	System.out.println(formatMessage(component, subComponent, message));
     }
 
     private static Object formatMessage(final String component, final String subComponent, final String message)
@@ -41,47 +45,57 @@ public class NativeLogger
         return String.format("[%s::%s] %s",component, subComponent, message);
     }
 
-    public static void debug(String component, String subComponent, String message)
+    public static void debug(final String component, final String subComponent, final String message)
     {
         if (_log.isDebugEnabled())
         {
             _log.debug(formatMessage(component, subComponent, message));
         }
+        if (SYSOUT)
+        	System.out.println(formatMessage(component, subComponent, message));
     }
 
-    public static void info(String component, String subComponent, String message)
+    public static void info(final String component, final String subComponent, final String message)
     {
         if (_log.isInfoEnabled())
         {
             _log.info(formatMessage(component, subComponent, message));
         }
+        if (SYSOUT)
+        	System.out.println(formatMessage(component, subComponent, message));
     }
 
-    public static void warn(String component, String subComponent, String message)
+    public static void warn(final String component, final String subComponent, final String message)
     {
         if (_log.isWarnEnabled())
         {
             _log.warn(formatMessage(component, subComponent, message));
         }
+        if (SYSOUT)
+        	System.out.println(formatMessage(component, subComponent, message));
     }
 
-    public static void error(String component, String subComponent, String message)
+    public static void error(final String component, final String subComponent, final String message)
     {
         if (_log.isErrorEnabled())
         {
             _log.error(formatMessage(component, subComponent, message));
         }
+        if (SYSOUT)
+        	System.out.println(formatMessage(component, subComponent, message));
     }
 
-    public static void fatal(String component, String subComponent, String message)
+    public static void fatal(final String component, final String subComponent, final String message)
     {
         if (_log.isFatalEnabled())
         {
             _log.fatal(formatMessage(component, subComponent, message));
         }
+        if (SYSOUT)
+        	System.out.println(formatMessage(component, subComponent, message));
     }
-    
-    public static void d(Object o) {
+
+    public static void d(final Object o) {
     	if (o != null)
     		System.out.println("d: " + o.getClass());
     	else

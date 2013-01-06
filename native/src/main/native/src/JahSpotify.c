@@ -121,7 +121,12 @@ static void SP_CALLCONV tracks_moved(sp_playlist *pl, const int *tracks, int num
  * @param  userdata      The opaque pointer
  */
 static void SP_CALLCONV playlist_renamed(sp_playlist *pl, void *userdata) {
-	log_debug("jahspotify", "tracks_renamed", "Tracks renamed: playlist: %s", sp_playlist_name(pl));
+	log_debug("jahspotify", "playlist_renamed", "Playlist renamed: playlist: %s", sp_playlist_name(pl));
+	JNIEnv *env = NULL;
+	if (!retrieveEnv((JNIEnv*) &env)) return;
+
+	setObjectStringField(env, (jobject) userdata, "name", sp_playlist_name(pl));
+	detachThread();
 }
 
 static void SP_CALLCONV playlist_state_changed(sp_playlist *pl, void *userdata) {
@@ -153,7 +158,7 @@ static void SP_CALLCONV playlist_state_changed(sp_playlist *pl, void *userdata) 
 }
 
 static void SP_CALLCONV playlist_update_in_progress(sp_playlist *pl, bool done, void *userdata) {
-	//log_debug("jahspotify","playlist_update_in_progress","Update in progress: %s (done: %s)", name, (done ? "yes" : "no"));
+	log_debug("jahspotify","playlist_update_in_progress","Update in progress: %s (done: %s)", sp_playlist_name(pl), (done ? "yes" : "no"));
 }
 
 static void SP_CALLCONV playlist_metadata_updated(sp_playlist *pl, void *userdata) {
@@ -181,7 +186,20 @@ static sp_playlist_callbacks pl_callbacks = { .tracks_added = &tracks_added, .tr
  */
 static void SP_CALLCONV playlist_added(sp_playlistcontainer *pc, sp_playlist *pl, int position, void *userdata) {
 	log_debug("jahspotify", "playlist_added", "Playlist added: %s (loaded: %s)", sp_playlist_name(pl), sp_playlist_is_loaded(pl) ? "Yes" : "No");
-	// sp_playlist_add_callbacks ( pl, &pl_callbacks, NULL );
+
+	JNIEnv *env = NULL;
+	if (!retrieveEnv((JNIEnv*) &env)) return;
+	jobject playlist = createJPlaylist(env, NULL, pl);
+
+	jclass jPc = (*env)->FindClass(env, "jahspotify/media/PlaylistContainer");
+	if (jPc == NULL ) {
+		log_error("jahspotify", "playlist_added", "Unable to get playlistcontainer class.");
+		return;
+	}
+	jmethodID jMethod = (*env)->GetStaticMethodID(env, jPc, "addPlaylist", "(Ljahspotify/media/Playlist;)V");
+	(*env)->CallStaticVoidMethod(env, jPc, jMethod, playlist);
+
+	detachThread();
 }
 
 /**
@@ -197,7 +215,7 @@ static void SP_CALLCONV playlist_added(sp_playlistcontainer *pc, sp_playlist *pl
 static void SP_CALLCONV playlist_removed(sp_playlistcontainer *pc, sp_playlist *pl, int position, void *userdata) {
 	const char *name = sp_playlist_name(pl);
 	log_debug("jahspotify", "playlist_removed", "Playlist removed: %s", name);
-//    sp_playlist_remove_callbacks ( pl, &pl_callbacks, NULL );
+    sp_playlist_remove_callbacks( pl, &pl_callbacks, NULL );
 }
 
 /**
@@ -207,6 +225,7 @@ static void SP_CALLCONV playlist_removed(sp_playlistcontainer *pc, sp_playlist *
  * @param  userdata      The opaque pointer
  */
 static void SP_CALLCONV container_loaded(sp_playlistcontainer *pc, void *userdata) {
+	/*
 	int i;
 
 	JNIEnv* env = NULL;
@@ -229,6 +248,8 @@ static void SP_CALLCONV container_loaded(sp_playlistcontainer *pc, void *userdat
 	}
 
 	detachThread();
+	*/
+	signalPlaylistsLoaded();
 }
 
 /**

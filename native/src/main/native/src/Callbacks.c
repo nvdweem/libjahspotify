@@ -252,6 +252,17 @@ int signalLoggedIn(int loggedIn) {
 	return 0;
 }
 
+int signalPlaylistsLoaded() {
+	JNIEnv* env = NULL;
+	if (!retrieveEnv((JNIEnv*) &env)) {
+		log_error("callbacks", "signalPlaylistsLoaded", "Error sending signal about playlists loaded.");
+		detachThread();
+		return -1;
+	}
+	invokeVoidMethod(env, g_connectionListener, "playlistsLoaded");
+	return 0;
+}
+
 void signalBlobUpdated(const char* blob) {
 	JNIEnv* env = NULL;
 	jmethodID method;

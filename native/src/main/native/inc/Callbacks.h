@@ -7,6 +7,7 @@
 void startPlaybackSignalled();
 int signalInitialized(int initialized);
 int signalLoggedIn(int loggedIn);
+int signalPlaylistsLoaded();
 int signalConnected();
 int signalDisconnected();
 int signalLoggedOut();

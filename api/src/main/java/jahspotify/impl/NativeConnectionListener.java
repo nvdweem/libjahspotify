@@ -9,6 +9,7 @@ public interface NativeConnectionListener
     public void connected();
     public void disconnected();
     public void loggedIn(boolean success);
+    public void playlistsLoaded();
     public void loggedOut();
     public void blobUpdated(String blob);
 }

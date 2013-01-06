@@ -14,12 +14,12 @@ import jahspotify.media.Image;
 import jahspotify.media.ImageSize;
 import jahspotify.media.Link;
 import jahspotify.media.Playlist;
+import jahspotify.media.PlaylistContainer;
 import jahspotify.media.TopListType;
 import jahspotify.media.Track;
 import jahspotify.media.User;
 import jahspotify.services.JahSpotifyService;
 import jahspotify.services.MediaHelper;
-import jahspotify.services.MediaPlayer;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -97,7 +97,7 @@ public class JahSpotifyImpl implements JahSpotify
             }
 
             @Override
-            public void artist(final int token, Artist artist)
+            public void artist(final int token, final Artist artist)
             {
                 artistLoadedCallback(token, artist);
             }
@@ -151,7 +151,7 @@ public class JahSpotifyImpl implements JahSpotify
 			}
 
 			@Override
-			public int addToBuffer(byte[] buffer) {
+			public int addToBuffer(final byte[] buffer) {
 				int highestReturn = 0;
 				for (PlaybackListener listener : _playbackListeners)
                 {
@@ -200,7 +200,8 @@ public class JahSpotifyImpl implements JahSpotify
                 for (final ConnectionListener listener : _connectionListeners)
                 {
                 	new Thread() {
-                		public void run() {listener.connected();}
+                		@Override
+						public void run() {listener.connected();}
                 	}.start();
                 }
             }
@@ -222,7 +223,8 @@ public class JahSpotifyImpl implements JahSpotify
                 for (final ConnectionListener listener : _connectionListeners)
                 {
                 	new Thread() {
-                		public void run() {listener.loggedIn(success);}
+                		@Override
+						public void run() {listener.loggedIn(success);}
                 	}.start();
                 }
             }
@@ -239,7 +241,8 @@ public class JahSpotifyImpl implements JahSpotify
 				for (final ConnectionListener listener : _connectionListeners)
                 {
                 	new Thread() {
-                		public void run() {listener.blobUpdated(blob);}
+                		@Override
+						public void run() {listener.blobUpdated(blob);}
                 	}.start();
                 }
 			}
@@ -250,9 +253,50 @@ public class JahSpotifyImpl implements JahSpotify
 				for (final ConnectionListener listener : _connectionListeners)
                 {
                 	new Thread() {
-                		public void run() {listener.initialized(initialized);}
+                		@Override
+						public void run() {listener.initialized(initialized);}
                 	}.start();
                 }
+			}
+
+			@Override
+			public void playlistsLoaded() {
+
+				boolean allLoaded = true;
+				for (Playlist pl : PlaylistContainer.getPlaylists()) {
+					if (!pl.isLoaded()) {
+						allLoaded = false;
+						break;
+					}
+				}
+
+				final boolean contents = allLoaded;
+				for (final ConnectionListener listener : _connectionListeners) {
+                	new Thread() {
+                		@Override
+						public void run() {listener.playlistsLoaded(contents);}
+                	}.start();
+                }
+
+				if (contents)
+					return;
+
+				// Keep waiting for the contents of the playlists in a new thread.
+				new Thread() {
+					@Override
+					public void run() {
+						for (Playlist pl : PlaylistContainer.getPlaylists()) {
+							while (isLoggedIn() && !MediaHelper.waitFor(pl, 5))
+								; // Do nothing.
+						}
+						for (final ConnectionListener listener : _connectionListeners) {
+							new Thread() {
+								@Override
+								public void run() {listener.playlistsLoaded(true);}
+							}.start();
+						}
+					}
+				}.start();
 			}
         });
     }
@@ -343,7 +387,7 @@ public class JahSpotifyImpl implements JahSpotify
         return readAlbum(uri, false);
     }
     @Override
-    public Album readAlbum(final Link uri, boolean browse)
+    public Album readAlbum(final Link uri, final boolean browse)
     {
         ensureLoggedIn();
 
@@ -364,7 +408,7 @@ public class JahSpotifyImpl implements JahSpotify
     	return readArtist(uri, false);
     }
     @Override
-    public Artist readArtist(final Link uri, boolean browse)
+    public Artist readArtist(final Link uri, final boolean browse)
     {
     	return readArtist(uri, browse ? 1 : 0);
     }
@@ -374,7 +418,7 @@ public class JahSpotifyImpl implements JahSpotify
      * @param browse 0 for no, 1 for yes, 2 for yes, but don't browse for tracks and albums.
      * @return
      */
-    private Artist readArtist(final Link uri, int browse) {
+    private Artist readArtist(final Link uri, final int browse) {
         ensureLoggedIn();
 
         _libSpotifyLock.lock();
@@ -389,7 +433,7 @@ public class JahSpotifyImpl implements JahSpotify
     }
 
     @Override
-    public Track readTrack(Link uri)
+    public Track readTrack(final Link uri)
     {
         ensureLoggedIn();
         _libSpotifyLock.lock();
@@ -437,7 +481,7 @@ public class JahSpotifyImpl implements JahSpotify
      * @param link
      * @return
      */
-    private Link getCorrectImageLink(Link link) {
+    private Link getCorrectImageLink(final Link link) {
     	switch (link.getType()) {
 	    	case ALBUM:
 				Album album = readAlbum(link);
@@ -472,7 +516,7 @@ public class JahSpotifyImpl implements JahSpotify
      * @return
      * @throws IOException
      */
-    private Image createPlaylistImage(Link link) throws IOException {
+    private Image createPlaylistImage(final Link link) throws IOException {
 		if (!link.isPlaylistLink()) throw new IllegalArgumentException("Link should be of type playlist");
 		Playlist playlist = readPlaylist(link, 0, 0);
 		MediaHelper.waitFor(playlist, 1);
@@ -531,7 +575,7 @@ public class JahSpotifyImpl implements JahSpotify
 	}
 
     @Override
-    public Playlist readPlaylist(Link uri, final int index, final int numEntries)
+    public Playlist readPlaylist(final Link uri, final int index, final int numEntries)
     {
         ensureLoggedIn();
         _libSpotifyLock.lock();
@@ -551,11 +595,11 @@ public class JahSpotifyImpl implements JahSpotify
     }
 
     @Override
-	public SearchResult getTopList(TopListType type) {
+	public SearchResult getTopList(final TopListType type) {
     	return getTopList(type, null);
     }
     @Override
-	public SearchResult getTopList(TopListType type, String country) {
+	public SearchResult getTopList(final TopListType type, final String country) {
     	int countrycode = -1;
     	if (country != null && country.length() == 2) {
     		countrycode = country.charAt(0) << 8 | country.charAt(1);
@@ -600,9 +644,9 @@ public class JahSpotifyImpl implements JahSpotify
         ensureLoggedIn();
         nativeResume();
     }
-    
+
 	@Override
-	public void setBitrate(Bitrate rate) {
+	public void setBitrate(final Bitrate rate) {
 		if (!initialized)
 			throw new RuntimeException("libJah'Spotify isn't initialized yet.");
 		setBitrate(rate.ordinal());
@@ -611,7 +655,7 @@ public class JahSpotifyImpl implements JahSpotify
     private native int nativeResume();
 
     @Override
-    public void play(Link link)
+    public void play(final Link link)
     {
         ensureLoggedIn();
         nativePlayTrack(link.asString());
@@ -659,7 +703,6 @@ public class JahSpotifyImpl implements JahSpotify
 			loader.newInstance();
 		} catch (Exception e) {
 			_log.warn("The native-jar was not found or could not load the required libraries. Trying to load jahspotify without it.");
-			e.printStackTrace();
 			System.loadLibrary("jahspotify");
 		}
     }
@@ -753,7 +796,7 @@ public class JahSpotifyImpl implements JahSpotify
         }
     }
 
-    public NativeSearchParameters initializeFromSearch(Search search)
+    public NativeSearchParameters initializeFromSearch(final Search search)
     {
         NativeSearchParameters nativeSearchParameters = new NativeSearchParameters();
         nativeSearchParameters._query = search.getQuery().serialize();
