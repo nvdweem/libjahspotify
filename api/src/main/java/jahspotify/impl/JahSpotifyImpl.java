@@ -235,6 +235,14 @@ public class JahSpotifyImpl implements JahSpotify
             {
                 _log.debug("Logged out");
                 _loggedIn = false;
+
+                for (final ConnectionListener listener : _connectionListeners)
+                {
+                	new Thread() {
+                		@Override
+						public void run() {listener.loggedOut();}
+                	}.start();
+                }
             }
 
 			@Override
