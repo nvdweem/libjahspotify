@@ -13,5 +13,5 @@ public abstract class AbstractConnectionListener implements ConnectionListener {
 	@Override public void playlistsLoaded(final boolean contents) {}
 	@Override public void loggedOut() {}
 	@Override public void blobUpdated(final String blob) {}
-
+	@Override public void playTokenLost() {}
 }

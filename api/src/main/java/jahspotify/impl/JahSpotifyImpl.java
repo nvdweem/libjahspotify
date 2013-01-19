@@ -167,6 +167,14 @@ public class JahSpotifyImpl implements JahSpotify
                 {
                     listener.playTokenLost();
                 }
+
+                for (final ConnectionListener listener : _connectionListeners)
+                {
+                	new Thread() {
+                		@Override
+						public void run() {listener.playTokenLost();}
+                	}.start();
+                }
 			}
         });
 

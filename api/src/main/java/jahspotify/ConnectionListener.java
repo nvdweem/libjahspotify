@@ -12,4 +12,5 @@ public interface ConnectionListener
     public void playlistsLoaded(boolean contents);
     public void loggedOut();
     public void blobUpdated(String blob);
+    public void playTokenLost();
 }
