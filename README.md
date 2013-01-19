@@ -7,7 +7,7 @@ libJah'Spotify
 This project originated as a fork from the Jah'Spotify tool of Johan Lindquist. Johans repository contains a complete web application, this project aims to
 be more of a library for other projects.
 
-If you are searching for a web based Spotify tool which is also compatible on mobile devices you should check out Johans original work at:
+If you are searching for a web based Spotify tool which is also compatible with mobile devices you should check out Johans original work at:
 
     https://github.com/johanlindquist/jahspotify
 
@@ -79,18 +79,16 @@ For windows, you will need to download a few more dependencies:
 This example shows how to initialize libJahSpotify and start playing a song.
 
 	public class Main {
-	
-		public static void main(String[] args) {
+		public static void main(final String[] args) {
 			// Determine the tempfolder and make sure it exists.
 			File temp = new File(new File(Main.class.getResource("Main.class").getFile()).getParentFile(), "temp");
 			temp.mkdirs();
-			
+	
 			// Start JahSpotify
 			JahSpotifyService.initialize(temp);
 			JahSpotifyService.getInstance().getJahSpotify().addConnectionListener(new AbstractConnectionListener() {
 				@Override
-				public void initialized(boolean initialized) {
-					
+				public void initialized(final boolean initialized) {
 					// Ask for the username and password.
 					BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 					String username = null, password = null;
@@ -103,16 +101,21 @@ This example shows how to initialize libJahSpotify and start playing a song.
 						e.printStackTrace();
 						System.exit(1);
 					}
-					
-					// When JahSpotify is initialized, we can attempt to login.
+	
+					// When JahSpotify is initialized, we can attempt to
+					// login.
 					if (initialized)
 						JahSpotifyService.getInstance().getJahSpotify().login(username, password, null, false);
 				}
-				
+	
 				@Override
-				public void loggedIn() {
+				public void loggedIn(final boolean success) {
+					if (!success) {
+						System.err.println("Unable to login.");
+						System.exit(1);
+					}
 					// Get a track.
-					Track t = JahSpotifyService.getInstance().getJahSpotify().readTrack(Link.create("spotify:track:6JEK0CvvjDjjMUBFoXShNZ"), null);
+					Track t = JahSpotifyService.getInstance().getJahSpotify().readTrack(Link.create("spotify:track:6JEK0CvvjDjjMUBFoXShNZ"));
 					// Wait for 10 seconds or until the track is loaded.
 					MediaHelper.waitFor(t, 10);
 					// If the track is loaded, play it.
@@ -121,7 +124,6 @@ This example shows how to initialize libJahSpotify and start playing a song.
 				}
 			});
 		}
-	
 	}
 
 ## Licensing
