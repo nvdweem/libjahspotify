@@ -207,14 +207,12 @@ int signalDisconnected() {
 int signalLoggedOut() {
 	JNIEnv* env = NULL;
 	if (!retrieveEnv((JNIEnv*) &env)) {
-		goto fail;
+		log_info("callbacks", "signalLoggedOut", "Error during callback");
+	} else {
+		invokeVoidMethod(env, g_connectionListener, "loggedOut");
+		log_info("callbacks", "signalLoggedOut", "Logout signalled");
 	}
-	invokeVoidMethod(env, g_connectionListener, "loggedOut");
-	goto exit;
-
-	fail: log_error("callbacks", "signalLoggedOut", "Error during callback");
-
-	exit: detachThread();
+	detachThread();
 	return 0;
 }
 

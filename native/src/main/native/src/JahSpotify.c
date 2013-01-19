@@ -73,6 +73,7 @@ void populateJAlbumInstance(JNIEnv *env, jobject albumInstance, sp_album *album,
 void populateJArtistInstance(JNIEnv *env, jobject artistInstance, sp_artist *artist, int browse);
 
 jobject createJPlaylist(JNIEnv *env, jobject playlistInstance, sp_playlist *playlist);
+jobject createJLinkInstance(JNIEnv *env, sp_link *link);
 static sp_playlist_callbacks pl_callbacks;
 
 /* --------------------------  PLAYLIST CALLBACKS  ------------------------- */
@@ -189,15 +190,23 @@ static void SP_CALLCONV playlist_added(sp_playlistcontainer *pc, sp_playlist *pl
 
 	JNIEnv *env = NULL;
 	if (!retrieveEnv((JNIEnv*) &env)) return;
-	jobject playlist = createJPlaylist(env, NULL, pl);
 
+	// Get container.
 	jclass jPc = (*env)->FindClass(env, "jahspotify/media/PlaylistContainer");
 	if (jPc == NULL ) {
 		log_error("jahspotify", "playlist_added", "Unable to get playlistcontainer class.");
+		detachThread();
 		return;
 	}
-	jmethodID jMethod = (*env)->GetStaticMethodID(env, jPc, "addPlaylist", "(Ljahspotify/media/Playlist;)V");
-	(*env)->CallStaticVoidMethod(env, jPc, jMethod, playlist);
+
+	// Get 'Playlist addPlaylist(Long)' method
+	jmethodID jMethod = (*env)->GetStaticMethodID(env, jPc, "addPlaylist", "(J)Ljahspotify/media/Playlist;");
+	long pTr = (long) pl;
+	jobject playlist = (*env)->CallStaticObjectMethod(env, jPc, jMethod, (jlong) pTr);
+
+	// If the playlist is null then it was already added.
+	if (playlist != NULL)
+		createJPlaylist(env, playlist, pl);
 
 	detachThread();
 }
@@ -228,7 +237,7 @@ static void SP_CALLCONV playlist_removed(sp_playlistcontainer *pc, sp_playlist *
 
 	jclass jPc = (*env)->FindClass(env, "jahspotify/media/PlaylistContainer");
 	if (jPc == NULL ) {
-		log_error("jahspotify", "container_loaded", "Unable to get playlistcontainer class.");
+		log_error("jahspotify", "playlist_removed", "Unable to get playlistcontainer class.");
 		return;
 	}
 	jmethodID jMethod = (*env)->GetStaticMethodID(env, jPc, "removePlaylist", "(Ljava/lang/String;)V");
@@ -245,30 +254,12 @@ static void SP_CALLCONV playlist_removed(sp_playlistcontainer *pc, sp_playlist *
  * @param  userdata      The opaque pointer
  */
 static void SP_CALLCONV container_loaded(sp_playlistcontainer *pc, void *userdata) {
-	/*
 	int i;
-
-	JNIEnv* env = NULL;
-	if (!retrieveEnv((JNIEnv*) &env)) return;
-
-	jclass jPc = (*env)->FindClass(env, "jahspotify/media/PlaylistContainer");
-	if (jPc == NULL ) {
-		log_error("jahspotify", "container_loaded", "Unable to get playlistcontainer class.");
-		return;
-	}
-	jmethodID jMethod = (*env)->GetStaticMethodID(env, jPc, "addPlaylist", "(Ljahspotify/media/Playlist;)V");
-	jmethodID clearMethod = (*env)->GetStaticMethodID(env, jPc, "clear", "()V");
-	(*env)->CallStaticVoidMethod(env, jPc, clearMethod);
-
+	// Make sure all playlists are added.
 	for (i = 0; i < sp_playlistcontainer_num_playlists(pc); ++i) {
 		sp_playlist *pl = sp_playlistcontainer_playlist(pc, i);
-
-		jobject playlist = createJPlaylist(env, NULL, pl);
-		(*env)->CallStaticVoidMethod(env, jPc, jMethod, playlist);
+		playlist_added(pc, pl, i, userdata);
 	}
-
-	detachThread();
-	*/
 	signalPlaylistsLoaded();
 }
 
