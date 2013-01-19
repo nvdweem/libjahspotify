@@ -29,8 +29,6 @@ public class PlaylistContainer {
 	 * @return An empty playlist object.
 	 */
 	public static Playlist addPlaylist(final long pTr) {
-		System.out.println("Add: " + pTr);
-
 		if (pTrs.contains(pTr))
 			return null;
 
