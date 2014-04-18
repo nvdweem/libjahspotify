@@ -46,6 +46,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JahSpotifyImpl implements JahSpotify
 {
+	private PlayerStatus status = PlayerStatus.STOPPED;
     private static Log _log = LogFactory.getLog(JahSpotify.class);
 
     private Lock _libSpotifyLock = new ReentrantLock();
@@ -653,6 +654,7 @@ public class JahSpotifyImpl implements JahSpotify
     {
         ensureLoggedIn();
         nativePause();
+        status = PlayerStatus.PAUSED;
     }
 
     private native int nativePause();
@@ -662,6 +664,7 @@ public class JahSpotifyImpl implements JahSpotify
     {
         ensureLoggedIn();
         nativeResume();
+        status = PlayerStatus.PLAYING;
     }
 
 	@Override
@@ -678,6 +681,7 @@ public class JahSpotifyImpl implements JahSpotify
     {
         ensureLoggedIn();
         nativePlayTrack(link.asString());
+        status = PlayerStatus.PLAYING;
     }
 
     private void ensureLoggedIn()
@@ -717,9 +721,14 @@ public class JahSpotifyImpl implements JahSpotify
     static
     {
     	try {
-    		// The native-jar is an optional dependency. Use it when it is available.
-			Class<?> loader = Class.forName("jahspotify.JahSpotifyNativeLoader");
-			loader.newInstance();
+    		String nativeLibrary = System.getProperty("jahspotify.lib", null);
+    		if(nativeLibrary != null) {
+    			System.load(nativeLibrary);
+    		} else {
+	    		// The native-jar is an optional dependency. Use it when it is available.
+				Class<?> loader = Class.forName("jahspotify.JahSpotifyNativeLoader");
+				loader.newInstance();
+    		}
 		} catch (Exception e) {
 			_log.warn("The native-jar was not found or could not load the required libraries. Trying to load jahspotify without it.");
 			System.loadLibrary("jahspotify");
@@ -777,6 +786,7 @@ public class JahSpotifyImpl implements JahSpotify
     {
         ensureLoggedIn();
         nativeStopTrack();
+        status = PlayerStatus.STOPPED;
     }
 
     public void initiateSearch(final Search search)
@@ -847,6 +857,11 @@ public class JahSpotifyImpl implements JahSpotify
 
         int playlistOffset = 0;
         int numPlaylists = 255;
+    }
+    
+    @Override
+    public PlayerStatus getStatus() {
+    	return status;
     }
 
     private native int nativeInitialize(String cacheFolder);
