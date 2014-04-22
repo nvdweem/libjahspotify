@@ -1385,6 +1385,8 @@ JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeTrackSeek(JNIEn
 JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_nativeStopTrack(JNIEnv *env, jobject obj) {
 	log_debug("jahspotify", "nativeStopTrack", "Stopping playback");
 	sp_session_player_unload(g_sess);
+  sp_track_release(g_currenttrack);
+  g_currenttrack = NULL;
 }
 
 JNIEXPORT void JNICALL Java_jahspotify_impl_JahSpotifyImpl_setBitrate(JNIEnv * env, jobject obj, jint rate) {

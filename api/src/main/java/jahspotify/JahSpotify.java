@@ -16,6 +16,11 @@ import jahspotify.media.User;
  * @author Johan Lindquist
  */
 public interface JahSpotify {
+	public enum PlayerStatus {
+		STOPPED,
+		PLAYING,
+		PAUSED;
+	};
 	/**
 	 * Initializes libJahSpotify.
 	 * 
@@ -243,5 +248,7 @@ public interface JahSpotify {
 	 * Shuts down the JahSpotify instance.
 	 */
 	public void shutdown();
+	
+	public PlayerStatus getStatus(); 
 
 }
