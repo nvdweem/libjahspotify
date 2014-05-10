@@ -44,6 +44,7 @@ public class SearchEngine
                 {
                     try
                     {
+                        searchResult.setLoaded(true);
                         resultQueue.put(searchResult);
                     }
                     catch (InterruptedException e)
